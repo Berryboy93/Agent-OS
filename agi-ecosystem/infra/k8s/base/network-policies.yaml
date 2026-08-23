@@ -1,0 +1,69 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agi-default-deny
+  namespace: agi-ecosystem
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-control-plane
+  namespace: agi-ecosystem
+spec:
+  podSelector:
+    matchLabels:
+      tier: control-plane
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: agi-ecosystem
+    - podSelector:
+        matchLabels:
+          tier: execution
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-execution
+  namespace: agi-ecosystem
+spec:
+  podSelector:
+    matchLabels:
+      tier: execution
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: control-plane
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: storage
+    - podSelector:
+        matchLabels:
+          tier: messaging
+    - podSelector:
+        matchLabels:
+          tier: cache
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: agi-ecosystem

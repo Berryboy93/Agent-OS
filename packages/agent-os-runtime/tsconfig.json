@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "references": [
+    {
+      "path": "../dag-compiler"
+    },
+    {
+      "path": "../mythos-policy-engine"
+    },
+    {
+      "path": "../event-store"
+    }
+  ],
+  "exclude": [
+    "src/agent-bridge.ts",
+    "src/agent-sandbox.ts",
+    "src/worker.ts",
+    "src/agent-ws-handler.ts",
+    "src/agent.ts"
+  ]
+}

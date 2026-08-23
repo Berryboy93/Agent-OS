@@ -1,0 +1,84 @@
+adminRouter.ts
+admin.sh
+agents
+agi-suite-startup-unified (1).sh
+App.tsx
+asi-audit-register.py
+asi_hygiene_audit_report.md
+asi-hygiene-master.sh
+asi_mastery_troubleshooter.sh
+asi-upgrade-fixed.sh
+audit_r3.txt
+audit_theme_config.py
+barrier-check.js
+BUG_FIXES_APPLIED.md
+client
+config
+db
+decisions.json
+depgraph.json
+deploy.sh
+docker-compose.yml
+Dockerfile
+docs
+drizzle
+drizzle.config.ts
+eslint.config.mjs
+EXECUTION_INDEX (1).md
+final-hygiene-fix.sh
+find_api_auth.sh
+fix_eslint_config.py
+human_review_queue.txt
+index.ts
+Licensing.md
+lint-cleanup-imports.py
+logs
+master_sync_drizzle_journal.sh
+MYTHOS-SKILL-v2.md
+nginx
+nixpacks.toml
+node_modules
+output
+p0-p1-deploy.sh
+p0_theme_additions.css
+package.json
+package.json.bak-20260511_232714
+packages
+patch_c01_esbuild_override.py
+patch-collab-daw.sh
+patch_remove_panel_borders.py
+patch_sa01_sa02_record_ownership.py
+patch_tsc_fix_userid_arg.py
+patch_ws01_userid_spoof.py
+pnpm_audit.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+r3audit
+r3-audit-round3.sh
+r3_audit_round3.sh
+r3execute
+r3-hygiene-execute.py
+r3hygiene.py
+r3-lint-cleanup.py
+r3-project-clean.sh
+r3setup
+railway.toml
+scripts
+secrets
+SECURITY (1).md
+SECURITY (2).md
+SECURITY (3).md
+SECURITY.md
+SECURITY_UPDATED (1).md
+Sending
+server
+services
+shared
+tests
+theme_config_rfc.txt
+tools
+tsconfig.json
+turbo.json
+vitest.config.ts
+VOCALSPECTRA_REMOVAL_PROCEDURE (1).md
+wire-ai-decision-ownership.py

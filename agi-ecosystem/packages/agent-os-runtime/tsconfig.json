@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "references": [
+    {
+      "path": "../dag-compiler"
+    },
+    {
+      "path": "../mythos-policy-engine"
+    },
+    {
+      "path": "../event-store"
+    }
+  ]
+}

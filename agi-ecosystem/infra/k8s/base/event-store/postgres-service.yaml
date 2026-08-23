@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-event-store
+  namespace: agi-ecosystem
+  labels:
+    app: postgres-event-store
+spec:
+  selector:
+    app: postgres-event-store
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  type: ClusterIP
+  clusterIP: None  # Headless for StatefulSet

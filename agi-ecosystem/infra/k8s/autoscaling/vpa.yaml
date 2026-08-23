@@ -1,0 +1,22 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: agent-os-vpa
+  namespace: agi-ecosystem
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agent-os-runtime
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: agent-os
+      minAllowed:
+        memory: 256Mi
+        cpu: 100m
+      maxAllowed:
+        memory: 4Gi
+        cpu: 2000m
+      controlledResources: ["cpu", "memory"]

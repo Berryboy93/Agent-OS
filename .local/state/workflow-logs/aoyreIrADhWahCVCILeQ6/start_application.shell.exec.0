@@ -1,0 +1,5 @@
+[1G[0K⠙[1G[0KAgent-OS Dashboard v3.0.0 on port 5000
+DB: /home/runner/workspace/agent-os.db
+Frontend: static build
+EventStore: active with 5-stage redaction pipeline
+SSE endpoints: /events (PRD §26.3), /api/sse (compat)

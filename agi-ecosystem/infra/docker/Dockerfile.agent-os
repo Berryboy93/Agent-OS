@@ -1,0 +1,26 @@
+# Multi-stage build for Agent OS Runtime
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN npm install -g pnpm
+COPY package.json pnpm-workspace.yaml tsconfig.json ./
+COPY packages/agent-os-runtime/package.json packages/agent-os-runtime/
+COPY packages/dag-compiler/package.json packages/dag-compiler/
+COPY packages/mythos-policy-engine/package.json packages/mythos-policy-engine/
+COPY packages/event-store/package.json packages/event-store/
+COPY packages/shared/package.json packages/shared/
+RUN pnpm install --no-frozen-lockfile
+COPY . .
+RUN pnpm --filter @agi-ecosystem/agent-os-runtime build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache dumb-init
+ENV NODE_ENV=production
+COPY --from=builder /app/packages/agent-os-runtime/dist ./dist
+COPY --from=builder /app/packages/agent-os-runtime/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+USER 1000
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+CMD ["dumb-init", "node", "dist/index.js"]

@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "paths": {
+      "@agent-os/adapters": ["../adapters/src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../db" },
+    { "path": "../events" },
+    { "path": "../memory" },
+    { "path": "../adapters" }
+  ]
+}

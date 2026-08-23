@@ -1,0 +1,27 @@
+{
+  "name": "@agi-ecosystem/agent-os",
+  "version": "2.0.0",
+  "description": "Agent OS Runtime - Sandboxed execution, capability management, and event emission",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agi-ecosystem/shared": "workspace:*",
+    "@agi-ecosystem/event-store": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

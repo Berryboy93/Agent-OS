@@ -1,0 +1,261 @@
+/* 
+ * Agent-OS Design Token System
+ * Scope: Agent-OS project only
+ * Not for: Stable/R3v4 (separate monorepo)
+ */
+
+:root {
+  /* ========== TYPOGRAPHY ========== */
+  --font-xs:   10px;
+  --font-sm:   12px;
+  --font-base: 14px;
+  --font-lg:   16px;
+  --font-xl:   20px;
+  --font-2xl:  24px;
+
+  --line-height-tight:   1.2;  /* headings */
+  --line-height-normal:  1.5;  /* body text */
+  --line-height-compact: 1;    /* UI labels, badges */
+
+  --font-family-mono: 'IBM Plex Mono', monospace;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ========== SPACING / LAYOUT ========== */
+  --gutter-xs:       4px;
+  --gutter-sm:       8px;
+  --gutter-md:       16px;
+  --gutter-lg:       24px;
+  --gutter-xl:       32px;
+
+  --sidebar-width:   240px;
+  --topbar-height:   56px;
+
+  /* ========== BORDER RADIUS ========== */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ========== GLASS OPACITY (SEMANTIC) ========== */
+  --glass-50:   rgba(255, 255, 255, 0.05);
+  --glass-100:  rgba(255, 255, 255, 0.10);
+  --glass-200:  rgba(255, 255, 255, 0.20);
+  --glass-300:  rgba(255, 255, 255, 0.30);
+  --glass-400:  rgba(255, 255, 255, 0.40);
+  --glass-500:  rgba(255, 255, 255, 0.50);
+  --glass-600:  rgba(255, 255, 255, 0.60);
+
+  /* ========== COLORS ========== */
+  --color-primary:     #a3e635;  /* Lime-green accent */
+  --color-primary-alt: #84cc16;  /* Lime-600 */
+  --color-bg-dark:     #0f172a;  /* slate-900 */
+  --color-bg-card:     #1e293b;  /* slate-800 */
+  --color-text:        #e2e8f0;  /* slate-200 */
+  --color-text-muted:  #94a3b8;  /* slate-400 */
+  --color-border:      #334155;  /* slate-700 */
+  --color-success:     #22c55e;  /* green-500 */
+  --color-warning:     #eab308;  /* yellow-400 */
+  --color-error:       #ef4444;  /* red-500 */
+  --color-info:        #3b82f6;  /* blue-500 */
+
+  /* ========== ANIMATIONS / MOTION ========== */
+  --duration-fast:     150ms;
+  --duration-normal:   300ms;
+  --duration-slow:     500ms;
+  --duration-slower:   800ms;
+
+  --ease-in:     cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spring physics (for interactive elements) */
+  --spring-bounce:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-smooth:  cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* ========== SHADOWS ========== */
+  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg:   0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl:   0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(163, 230, 53, 0.3);
+
+  /* ========== Z-INDEX ========== */
+  --z-dropdown: 1000;
+  --z-sticky:   100;
+  --z-fixed:    500;
+  --z-modal:    1300;
+  --z-tooltip:  1400;
+}
+
+/* ========== UTILITY CLASSES ========== */
+
+.text-xs {
+  font-size: var(--font-xs);
+  line-height: var(--line-height-compact);
+}
+
+.text-sm {
+  font-size: var(--font-sm);
+  line-height: var(--line-height-normal);
+}
+
+.text-base {
+  font-size: var(--font-base);
+  line-height: var(--line-height-normal);
+}
+
+.text-lg {
+  font-size: var(--font-lg);
+  line-height: var(--line-height-normal);
+}
+
+.text-xl {
+  font-size: var(--font-xl);
+  line-height: var(--line-height-tight);
+}
+
+.text-2xl {
+  font-size: var(--font-2xl);
+  line-height: var(--line-height-tight);
+}
+
+/* Glass effect cards */
+.glass-sm {
+  background: var(--glass-100);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-200);
+  border-radius: var(--radius-md);
+}
+
+.glass-md {
+  background: var(--glass-200);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-300);
+  border-radius: var(--radius-lg);
+}
+
+.glass-lg {
+  background: var(--glass-300);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-400);
+  border-radius: var(--radius-lg);
+}
+
+/* Transitions */
+.transition-fast {
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+
+.transition-normal {
+  transition: all var(--duration-normal) var(--ease-in-out);
+}
+
+.transition-slow {
+  transition: all var(--duration-slow) var(--ease-in-out);
+}
+
+/* Status indicators */
+.status-success {
+  color: var(--color-success);
+  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--color-success);
+}
+
+.status-warning {
+  color: var(--color-warning);
+  background: rgba(234, 179, 8, 0.1);
+  border-color: var(--color-warning);
+}
+
+.status-error {
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--color-error);
+}
+
+.status-info {
+  color: var(--color-info);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--color-info);
+}
+
+/* Glow effects for interactive elements */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(163, 230, 53, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(163, 230, 53, 0.4);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse var(--duration-slow) var(--ease-in-out) infinite;
+}
+
+/* Spring bounce for alerts */
+@keyframes spring-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.spring-in {
+  animation: spring-in var(--duration-normal) var(--spring-bounce);
+}
+
+/* Tab transition (directional) */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left var(--duration-normal) var(--ease-out);
+}
+
+.slide-in-right {
+  animation: slide-in-right var(--duration-normal) var(--ease-out);
+}
+
+/* Progress indicator */
+@keyframes progress-fill {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.progress-stroke {
+  animation: progress-fill var(--duration-slow) var(--ease-out) forwards;
+}

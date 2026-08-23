@@ -1,0 +1,11 @@
+--- a/packages/dag-compiler/src/compiler/DependencyResolver.ts
++++ b/packages/dag-compiler/src/compiler/DependencyResolver.ts
+@@ -82,7 +82,7 @@
+     return resolution;
+   }
+
+-  findCriticalPath(dag: DAG, resolution: Map<UUID, ResolvedDependency>): UUID[] {
++  async findCriticalPath(dag: DAG, resolution: Map<UUID, ResolvedDependency>): Promise<UUID[]> {
+     // Dynamic programming to find longest path
+     const distances = new Map<UUID, number>();
+     const predecessors = new Map<UUID, UUID | null>();

@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "references": [
+    {
+      "path": "../dag-compiler"
+    },
+    {
+      "path": "../simulation-engine"
+    },
+    {
+      "path": "../mythos-policy-engine"
+    },
+    {
+      "path": "../swarm-runtime"
+    },
+    {
+      "path": "../event-store"
+    }
+  ]
+}

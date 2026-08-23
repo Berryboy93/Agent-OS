@@ -1,0 +1,118 @@
+/**
+ * Agent-OS Design Tokens v1.0
+ * Glass morphism + semantic color system
+ */
+
+:root {
+  /* ── Typography ───────────────────────────────────────── */
+  --font-xs:   10px;
+  --font-sm:   12px;
+  --font-base: 14px;
+  --font-lg:   16px;
+  --font-xl:   20px;
+  --font-2xl:  24px;
+
+  --line-height-tight:   1.2;
+  --line-height-normal:  1.5;
+  --line-height-compact: 1;
+
+  /* ── Spacing ────────────────────────────────────────────── */
+  --gutter-xs:  4px;
+  --gutter-sm:  8px;
+  --gutter-md:  16px;
+  --gutter-lg:  24px;
+  --gutter-xl:  32px;
+
+  /* ── Border Radius ──────────────────────────────────────── */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Glass Opacity ──────────────────────────────────────── */
+  --glass-50:   rgba(255, 255, 255, 0.05);
+  --glass-100:  rgba(255, 255, 255, 0.10);
+  --glass-200:  rgba(255, 255, 255, 0.20);
+  --glass-300:  rgba(255, 255, 255, 0.30);
+  --glass-400:  rgba(255, 255, 255, 0.40);
+  --glass-500:  rgba(255, 255, 255, 0.50);
+  --glass-600:  rgba(255, 255, 255, 0.60);
+
+  /* ── Colors ─────────────────────────────────────────────── */
+  --color-primary:   #a3e635;
+  --color-success:   #22c55e;
+  --color-warning:   #eab308;
+  --color-error:     #ef4444;
+  --color-info:      #3b82f6;
+
+  --color-text:        #e2e8f0;
+  --color-text-muted:  #94a3b8;
+  --color-bg:          #0f172a;
+  --color-bg-surface:  #1e293b;
+
+  /* ── Motion ─────────────────────────────────────────────── */
+  --transition-fast:    150ms;
+  --transition-normal:  300ms;
+  --transition-slow:    500ms;
+  --transition-slower:  800ms;
+
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth:  cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-linear:  linear;
+
+  /* ── Shadows ──────────────────────────────────────────────── */
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(163, 230, 53, 0.3);
+
+  /* ── Z-Index ────────────────────────────────────────────── */
+  --z-base:     0;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-modal:    300;
+  --z-popover:  400;
+  --z-tooltip:  500;
+}
+
+/* ── Utility Classes ─────────────────────────────────────── */
+.glass-50   { background: var(--glass-50);   backdrop-filter: blur(4px);  }
+.glass-100  { background: var(--glass-100);  backdrop-filter: blur(8px);  }
+.glass-200  { background: var(--glass-200);  backdrop-filter: blur(12px); }
+.glass-300  { background: var(--glass-300);  backdrop-filter: blur(16px); }
+.glass-400  { background: var(--glass-400);  backdrop-filter: blur(20px); }
+.glass-500  { background: var(--glass-500);  backdrop-filter: blur(24px); }
+.glass-600  { background: var(--glass-600);  backdrop-filter: blur(28px); }
+
+.status-success { color: var(--color-success); }
+.status-warning { color: var(--color-warning); }
+.status-error   { color: var(--color-error); }
+.status-info    { color: var(--color-info); }
+
+.transition-fast    { transition: all var(--transition-fast) var(--ease-smooth); }
+.transition-normal  { transition: all var(--transition-normal) var(--ease-smooth); }
+.transition-slow    { transition: all var(--transition-slow) var(--ease-smooth); }
+
+.spring-in { animation: springIn var(--transition-slow) var(--ease-spring); }
+
+@keyframes springIn {
+  0%   { opacity: 0; transform: scale(0.9) translateY(10px); }
+  60%  { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(163, 230, 53, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(163, 230, 53, 0.5); }
+}

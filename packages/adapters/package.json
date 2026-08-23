@@ -1,0 +1,30 @@
+{
+  "name": "@agent-os/adapters",
+  "version": "3.0.0",
+  "description": "Agent-OS LLM provider adapters (Anthropic, OpenAI, Local)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@agent-os/core": "workspace:*",
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@google/generative-ai": "^0.24.1",
+    "@mistralai/mistralai": "^2.2.5",
+    "cohere-ai": "^8.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "typescript": "*"
+  }
+}

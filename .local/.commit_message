@@ -1,0 +1,29 @@
+Fix 8 dependency vulnerabilities (Task #4)
+
+Resolved all 8 reported CVEs by upgrading 4 packages across 3 workspace packages:
+
+drizzle-orm (High — GHSA-gpj5-g38j-94v9):
+  - apps/dashboard/package.json: ^0.30.10 → ^0.45.2
+  - packages/db/package.json:    ^0.30.10 → ^0.45.2
+  Fix: SQL injection via improperly escaped identifiers; patched in >=0.45.2
+
+uuid (High — GHSA-w5hq-g745-h8pq):
+  - apps/dashboard/package.json: ^10.0.0  → ^11.1.1
+  - packages/runtime/package.json: ^10.0.0 → ^11.1.1
+  - @types/uuid updated to ^11.0.0 in both packages
+  Fix: Missing buffer bounds check in v3/v5/v6 variants; patched in >=11.1.1
+  Note: uuid v11 named exports (v4, etc.) are API-compatible; no code changes needed.
+
+vite (Medium — GHSA-4w7w-66w2-5vf9):
+  - apps/dashboard/package.json: ^5.3.1 → ^6.4.2
+  Fix: Path traversal in optimized deps .map handling; patched in >=6.4.2
+  Also updated @vitejs/plugin-react ^4.3.1 → ^5.1.4 (v5 explicitly supports vite ^6.0.0)
+
+esbuild (Medium — GHSA-67mh-4wv8-2f99):
+  - Transitive dep via vite. Vite upgrade pulls esbuild >=0.25.0 (was 0.21.5).
+  Fix: Dev server CORS bypass; patched in >=0.25.0
+
+Post-fix:
+  - pnpm audit reports "No known vulnerabilities found"
+  - Vite 6 production build succeeded (vite v6.4.2)
+  - Dashboard rebuilt and workflow restarted — app confirmed running on v3.0.0

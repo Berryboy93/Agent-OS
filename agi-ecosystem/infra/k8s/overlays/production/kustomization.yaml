@@ -1,0 +1,64 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: agi-ecosystem
+
+resources:
+- ../../base/namespace.yaml
+- ../../base/configmap.yaml
+- ../../base/secrets.yaml
+- ../../base/rbac.yaml
+- ../../base/network-policies.yaml
+- ../../base/dag-compiler/
+- ../../base/agent-os/
+- ../../base/mythos/
+- ../../base/event-store/
+- ../../base/swarm-runtime/
+- ../../autoscaling/
+
+images:
+- name: agi-ecosystem/dag-compiler
+  newTag: "2.0.0-prod"
+- name: agi-ecosystem/agent-os-runtime
+  newTag: "2.0.0-prod"
+- name: agi-ecosystem/mythos-policy-engine
+  newTag: "2.0.0-prod"
+
+replicas:
+- name: dag-compiler
+  count: 5
+- name: agent-os-runtime
+  count: 10
+- name: mythos-policy-engine
+  count: 5
+
+patchesStrategicMerge:
+- |
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: dag-compiler
+  spec:
+    template:
+      spec:
+        containers:
+        - name: dag-compiler
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+
+patches:
+- target:
+    kind: ConfigMap
+    name: agi-config
+  patch: |
+    - op: replace
+      path: /data/SWARM_MAX_AGENTS
+      value: "50"
+    - op: replace
+      path: /data/SIM_MAX_BRANCHES
+      value: "50"

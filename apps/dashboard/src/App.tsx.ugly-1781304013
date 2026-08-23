@@ -1,0 +1,313 @@
+/**
+ * App.tsx — Agent-OS Dashboard with Tool Registry
+ * Integrates HTML design with React + API
+ */
+import { useState, useEffect } from 'react'
+import { api, type AgentRun } from './lib/api'
+import { toolsApi, type Tool } from './lib/toolsApi'
+import './styles/dashboard.css'
+
+interface Toast {
+  id: string
+  type: 'success' | 'error' | 'info'
+  title: string
+  message: string
+}
+
+export default function App() {
+  const [sseConnected, setSseConnected] = useState(false)
+  const [tools, setTools] = useState<Tool[]>([])
+  const [filteredTools, setFilteredTools] = useState<Tool[]>([])
+  const [agents, setAgents] = useState<any[]>([])
+  const [runs, setRuns] = useState<AgentRun[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('registry')
+  const [showModal, setShowModal] = useState(false)
+  const [toasts, setToasts] = useState<Toast[]>([])
+  
+  const [newTool, setNewTool] = useState({
+    name: '',
+    id: '',
+    description: '',
+    version: '1.0.0'
+  })
+
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const toolsRes = await toolsApi.listTools()
+        setTools(toolsRes)
+        setFilteredTools(toolsRes)
+        
+        const agentsRes = await api.getAgents()
+        setAgents(agentsRes)
+        
+        const runsRes = await api.getRuns(5)
+        setRuns(runsRes)
+        
+        setSseConnected(true)
+      } catch (err) {
+        showToast('error', 'Load Error', (err as Error).message)
+        setSseConnected(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+    const interval = setInterval(() => setSseConnected(prev => !prev), 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    let filtered = tools
+    
+    if (search) {
+      const term = search.toLowerCase()
+      filtered = filtered.filter(t => 
+        t.name.toLowerCase().includes(term) ||
+        t.id.toLowerCase().includes(term) ||
+        t.description.toLowerCase().includes(term)
+      )
+    }
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(t => t.status === statusFilter)
+    }
+    
+    setFilteredTools(filtered)
+  }, [tools, search, statusFilter])
+
+  const showToast = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    const id = Date.now().toString()
+    setToasts(prev => [...prev, { id, type, title, message }])
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 4000)
+  }
+
+  const createTool = async () => {
+    if (!newTool.name || !newTool.id) {
+      showToast('error', 'Validation Error', 'Tool name and ID are required.')
+      return
+    }
+
+    try {
+      const created = await toolsApi.createTool({
+        name: newTool.name,
+        description: newTool.description,
+        version: newTool.version
+      })
+      
+      setTools(prev => [created, ...prev])
+      setNewTool({ name: '', id: '', description: '', version: '1.0.0' })
+      setShowModal(false)
+      showToast('success', 'Tool Created', `${newTool.name} has been added to the registry.`)
+    } catch (err) {
+      showToast('error', 'Creation Failed', (err as Error).message)
+    }
+  }
+
+  if (loading) return <div style={{textAlign: 'center', padding: '2rem', color: '#fff'}}>Loading...</div>
+
+  return (
+    <div style={{display: 'flex', minHeight: '100vh', fontFamily: 'Inter, sans-serif', background: '#0a0e1a', color: '#f0f4f8'}}>
+      {/* SSE Banner */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: '32px',
+        background: sseConnected ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+        color: sseConnected ? '#10b981' : '#ef4444',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, fontSize: '12px', fontWeight: 500
+      }}>
+        <span style={{width: '8px', height: '8px', borderRadius: '50%', marginRight: '8px', background: sseConnected ? '#10b981' : '#ef4444'}}></span>
+        <span>{sseConnected ? '🟢 Online' : '🔴 Offline'}</span>
+      </div>
+
+      {/* Sidebar */}
+      <aside style={{
+        width: '240px', background: '#111827', borderRight: '1px solid #2a324a',
+        display: 'flex', flexDirection: 'column', position: 'fixed',
+        top: '32px', bottom: 0, left: 0, zIndex: 100
+      }}>
+        <div style={{padding: '20px 16px', borderBottom: '1px solid #1e2538', display: 'flex', alignItems: 'center', gap: '12px'}}>
+          <div style={{width: '36px', height: '36px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px'}}>⚙️</div>
+          <div>
+            <div style={{fontSize: '15px', fontWeight: 700}}>Agent-OS</div>
+            <div style={{fontSize: '11px', color: '#64748b', fontFamily: 'monospace'}}>v2.8.0</div>
+          </div>
+        </div>
+        
+        <nav style={{flex: 1, padding: '12px 8px', overflowY: 'auto'}}>
+          {[{id: 'registry', label: 'Registry', icon: '🔧'}, {id: 'executions', label: 'Executions', icon: '▶️'}, {id: 'analytics', label: 'Analytics', icon: '📊'}].map(item => (
+            <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px',
+              borderRadius: '8px', color: activeTab === item.id ? '#6366f1' : '#94a3b8',
+              fontSize: '14px', fontWeight: 500, cursor: 'pointer', background: activeTab === item.id ? 'rgba(99,102,241,0.15)' : 'transparent',
+              border: activeTab === item.id ? '1px solid rgba(99,102,241,0.2)' : 'none',
+              width: '100%', marginBottom: '2px'
+            }}>
+              <span>{item.icon}</span><span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div style={{padding: '16px', borderTop: '1px solid #1e2538'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', marginBottom: '12px'}}>
+            <div style={{width: '8px', height: '8px', borderRadius: '50%', background: '#10b981'}}></div>
+            <span>System Healthy</span>
+          </div>
+          <p style={{fontSize: '11px', color: '#64748b'}}>{tools.length} tools • {agents.length} agents</p>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main style={{marginLeft: '240px', flex: 1, marginTop: '32px', display: 'flex', flexDirection: 'column'}}>
+        {/* Header */}
+        <div style={{padding: '32px', borderBottom: '1px solid #2a324a', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <div>
+            <h1 style={{fontSize: '32px', fontWeight: 700, margin: '0 0 8px 0'}}>Tool Registry</h1>
+            <p style={{color: '#94a3b8', margin: 0}}>Manage and monitor all registered tools</p>
+          </div>
+          <button onClick={() => setShowModal(true)} style={{
+            padding: '10px 16px', background: '#6366f1', color: '#fff', border: 'none',
+            borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+            fontSize: '14px', fontWeight: 500
+          }}>
+            <span>➕</span><span>New Tool</span>
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{display: 'flex', gap: '24px', padding: '16px 32px', borderBottom: '1px solid #2a324a'}}>
+          {[{id: 'registry', label: 'Registry', count: tools.length}, {id: 'executions', label: 'Executions', count: runs.length}, {id: 'analytics', label: 'Analytics', count: agents.length}].map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              padding: '8px 0', borderBottom: activeTab === tab.id ? '2px solid #6366f1' : 'none',
+              color: activeTab === tab.id ? '#6366f1' : '#94a3b8', background: 'none', border: 'none',
+              cursor: 'pointer', fontSize: '14px', fontWeight: 500
+            }}>
+              {tab.label} <span style={{marginLeft: '4px', color: '#64748b'}}>({tab.count})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{flex: 1, overflow: 'auto', padding: '32px'}}>
+          {activeTab === 'registry' && (
+            <>
+              <div style={{display: 'flex', gap: '16px', marginBottom: '24px'}}>
+                <div style={{flex: 1, display: 'flex', alignItems: 'center', gap: '12px', background: '#161b2a', padding: '0 12px', borderRadius: '8px', border: '1px solid #2a324a'}}>
+                  <span>🔍</span>
+                  <input type="text" placeholder="Search tools..." value={search} onChange={e => setSearch(e.target.value)} style={{flex: 1, background: 'transparent', border: 'none', color: '#f0f4f8', outline: 'none', padding: '10px 0'}} />
+                </div>
+                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{padding: '10px 12px', background: '#161b2a', color: '#f0f4f8', border: '1px solid #2a324a', borderRadius: '8px', cursor: 'pointer'}}>
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px'}}>
+                {filteredTools.length === 0 ? (
+                  <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#161b2a', borderRadius: '8px'}}>
+                    <div style={{fontSize: '40px', marginBottom: '12px'}}>🔧</div>
+                    <h3 style={{marginBottom: '8px'}}>No tools found</h3>
+                    <p style={{color: '#94a3b8', marginBottom: '16px'}}>No tools match your filters.</p>
+                  </div>
+                ) : (
+                  filteredTools.map(tool => (
+                    <div key={tool.id} style={{background: '#161b2a', border: '1px solid #2a324a', borderRadius: '8px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s'}}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                          <div style={{fontSize: '24px'}}>🔧</div>
+                          <div>
+                            <h3 style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: 600}}>{tool.name}</h3>
+                            <span style={{fontSize: '12px', color: '#64748b', fontFamily: 'monospace'}}>{tool.id}</span>
+                          </div>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#10b981'}}>
+                          <span style={{width: '6px', height: '6px', borderRadius: '50%', background: '#10b981'}}></span>
+                          <span>Active</span>
+                        </div>
+                      </div>
+                      <p style={{fontSize: '13px', color: '#94a3b8', margin: '0 0 12px 0'}}>{tool.description}</p>
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <div style={{display: 'flex', gap: '8px'}}>
+                          <span style={{fontSize: '11px', background: 'rgba(99,102,241,0.1)', color: '#6366f1', padding: '2px 6px', borderRadius: '4px'}}>v{tool.version}</span>
+                        </div>
+                        <span style={{fontSize: '11px', color: '#64748b'}}>Created: {new Date(tool.registeredAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'executions' && (
+            <div style={{textAlign: 'center', padding: '40px'}}>
+              <div style={{fontSize: '40px', marginBottom: '12px'}}>▶️</div>
+              <h3>Recent Executions</h3>
+              <p style={{color: '#94a3b8'}}>Monitor agent executions in real-time</p>
+              <div style={{marginTop: '24px'}}>
+                {runs.map(run => (
+                  <div key={run.id} style={{display: 'flex', justifyContent: 'space-between', padding: '12px', background: '#161b2a', marginBottom: '8px', borderRadius: '6px', fontSize: '13px'}}>
+                    <span>{run.id}</span>
+                    <span style={{color: run.status === 'COMPLETED' ? '#10b981' : '#f59e0b'}}>{run.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div style={{textAlign: 'center', padding: '40px'}}>
+              <div style={{fontSize: '40px', marginBottom: '12px'}}>📊</div>
+              <h3>Analytics Coming Soon</h3>
+              <p style={{color: '#94a3b8'}}>Real-time metrics and insights will appear here.</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Modal */}
+      {showModal && (
+        <div onClick={() => setShowModal(false)} style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000}}>
+          <div onClick={e => e.stopPropagation()} style={{background: '#161b2a', border: '1px solid #2a324a', borderRadius: '8px', width: '90%', maxWidth: '400px'}}>
+            <div style={{padding: '20px', borderBottom: '1px solid #2a324a', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <h2 style={{margin: 0}}>Create New Tool</h2>
+              <button onClick={() => setShowModal(false)} style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px'}}>✕</button>
+            </div>
+            <div style={{padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px'}}>
+              <input type="text" placeholder="Tool Name" value={newTool.name} onChange={e => setNewTool({...newTool, name: e.target.value})} style={{padding: '10px 12px', background: '#0a0e1a', border: '1px solid #2a324a', borderRadius: '6px', color: '#f0f4f8'}} />
+              <input type="text" placeholder="Tool ID" value={newTool.id} onChange={e => setNewTool({...newTool, id: e.target.value})} style={{padding: '10px 12px', background: '#0a0e1a', border: '1px solid #2a324a', borderRadius: '6px', color: '#f0f4f8'}} />
+              <textarea placeholder="Description" value={newTool.description} onChange={e => setNewTool({...newTool, description: e.target.value})} style={{padding: '10px 12px', background: '#0a0e1a', border: '1px solid #2a324a', borderRadius: '6px', color: '#f0f4f8', resize: 'none'}} rows={3} />
+              <input type="text" placeholder="Version" value={newTool.version} onChange={e => setNewTool({...newTool, version: e.target.value})} style={{padding: '10px 12px', background: '#0a0e1a', border: '1px solid #2a324a', borderRadius: '6px', color: '#f0f4f8'}} />
+            </div>
+            <div style={{padding: '20px', borderTop: '1px solid #2a324a', display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowModal(false)} style={{padding: '10px 16px', background: 'transparent', color: '#6366f1', border: '1px solid #6366f1', borderRadius: '6px', cursor: 'pointer'}}>Cancel</button>
+              <button onClick={createTool} style={{padding: '10px 16px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer'}}>Create</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toasts */}
+      <div style={{position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px'}}>
+        {toasts.map(toast => (
+          <div key={toast.id} style={{background: '#161b2a', border: `1px solid ${toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6'}`, borderRadius: '8px', padding: '16px', minWidth: '300px', display: 'flex', gap: '12px', alignItems: 'flex-start'}}>
+            <span>{toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}</span>
+            <div>
+              <div style={{fontWeight: 600, marginBottom: '4px'}}>{toast.title}</div>
+              <div style={{fontSize: '13px', color: '#94a3b8'}}>{toast.message}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

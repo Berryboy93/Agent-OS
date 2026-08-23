@@ -1,0 +1,18 @@
+[1G[0K⠙[1G[0K⠹[1G[0K⠸[1G[0K⠼[1G[0K⠴[1G[0K⠦[1G[0KAgent-OS Dashboard running on port 5000
+DB: /home/runner/workspace/agent-os.db
+Frontend: static build
+EventStore: active with 5-stage redaction
+/home/runner/workspace/apps/dashboard/server.ts:252
+  const recoverable = rawDb._.client.prepare(
+                                     ^
+
+
+TypeError: Cannot read properties of undefined (reading 'prepare')
+    at Server.<anonymous> [90m(/home/runner/workspace/[39mapps/dashboard/server.ts:252:38[90m)[39m
+[90m    at Object.onceWrapper (node:events:638:28)[39m
+[90m    at Server.emit (node:events:536:35)[39m
+[90m    at emitListeningNT (node:net:1951:10)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:81:21)[39m
+
+Node.js v20.20.0
+[1G[0K⠙[1G[0K

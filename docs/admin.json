@@ -1,0 +1,156 @@
+postgres server 
+
+ADMIN_EMAIL="earnestathepco@gmail.com"
+APP_URL="http://http://localhost:5174"
+DATABASE_PUBLIC_URL=""
+DATABASE_URL="postgresql://r3:r3vibe@localhost:5432/r3vibe"
+INTERNAL_SECRET="a793d38e749d42e562ea00351d1ba616"
+JWT_EXPIRES_IN="7d"
+JWT_SECRET="0fbb12a788a03cae5bba053f25b6ba8429f4476f20154ffbf347cc44e6e39270"
+NODE_ENV="production"
+PGDATA="/var/lib/postgresql/data/pgdata"
+PGDATABASE="${{POSTGRES_DB}}"
+PGHOST="${{RAILWAY_PRIVATE_DOMAIN}}"
+PGPASSWORD="${{POSTGRES_PASSWORD}}"
+PGPORT="5432"
+PGUSER="${{POSTGRES_USER}}"
+PORT="3000"
+POSTGRES_DB="railway"
+POSTGRES_PASSWORD="kgNcighIkTpIQERColEJXyRQTwAFPZYV"
+POSTGRES_USER="postgres"
+RAILWAY_DEPLOYMENT_DRAINING_SECONDS="60"
+SSL_CERT_DAYS="820"
+STORAGE_BUCKET="r3-uploads"
+STORAGE_REGION="auto"
+STRIPE_CREATOR_MONTHLY_PRICE_ID="price_1T8XVF2fOIqsdBJyMgkeEZA4"
+STRIPE_CREATOR_YEARLY_PRICE_ID="price_1T8XZg2fOIqsdBJy5TSygHdN"
+STRIPE_PRO_ARTIST_MONTHLY_PRICE_ID="price_1T8XWt2fOIqsdBJy6AyVFvV1"
+STRIPE_PRO_ARTIST_YEARLY_PRICE_ID="price_1T8XWt2fOIqsdBJyPod0a7V8"
+STRIPE_SECRET_KEY="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"
+STRIPE_WEBHOOK_SECRET="whsec_27a830bb52bbb50ee410905e1245952e25f269563c66440d735fda3768791bb4"
+
+export DATABASE_URL=postgresql://r3:r3vibe@localhost:5432/r3vibe
+ghcr.io/railwayapp-templates/postgres-ssl:18
+postgres-production-9ee0.up.railway.app
+turntable.proxy.rlwy.net:22620
+postgres.railway.internal
+postgres-production-9ee0.up.railway.app
+turntable.proxy.rlwy.net:22620
+postgres.railway.internal
+
+
+
+
+__________________________________________________________________________________________________
+
+
+r3v4 server 
+
+ANTHROPIC_API_KEY="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"
+APP_URL="http://http://localhost:5174"
+DATABASE_URL="postgresql://postgres:kgNcighIkTpIQERColEJXyRQTwAFPZYV@postgres.railway.internal:5432/railway"
+JWT_EXPIRES_IN="7d"
+JWT_SECRET="f06c3e489f44015888be4b4ff087747aade3c6b7190e13dc03d1c2011cac6b2660087c5724ad659dc7ed26c0b4789b7c905b0f39e48b1f9293f4fc45d7e54881"
+NODE_ENV="production"
+STORAGE_ACCESS_KEY_ID="your_access_key"
+STORAGE_BUCKET="r3-uploads"
+STORAGE_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
+STORAGE_PUBLIC_URL="https://uploads.your-domain.com"
+STORAGE_REGION="auto"
+STORAGE_SECRET_ACCESS_KEY="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"
+STRIPE_CREATOR_MONTHLY_PRICE_ID="price_1T8XVF2fOIqsdBJyMgkeEZA4"
+STRIPE_CREATOR_YEARLY_PRICE_ID="price_1T8XZg2fOIqsdBJy5TSygHdN"
+STRIPE_PRO_ARTIST_MONTHLY_PRICE_ID="price_1T8XWt2fOIqsdBJy6AyVFvV1"
+STRIPE_PRO_ARTIST_YEARLY_PRICE_ID="price_1T8XWt2fOIqsdBJyPod0a7V8"
+STRIPE_WEBHOOK_SECRET="whsec_27a830bb52bbb50ee410905e1245952e25f269563c66440d735fda3768791bb4"
+
+
+revibe25/r3v4
+r3v4-production.up.railway.app
+Branch connected to production
+Changes made to this GitHub branch will be automatically pushed to this environment.
+main
+
+r3v4-production.up.railway.app
+turntable.proxy.rlwy.net:42598
+r3v4.railway.internal
+
+
+make start              # Start API + Frontend
+make status             # Check what's running
+make logs               # View logs
+make stop               # Stop everything
+make restart            # Restart all
+make build              # Rebuild projects
+make clean              # Clean everything
+
+
+✓ Development server started (PID: 12345)
+✓ Services started!
+  API: http://localhost:3001
+  Frontend: http://localhost:5176+
+
+  # Development (what you should use daily)
+make dev              # Start with live reload
+make dev-logs         # Watch logs
+make dev-status       # Check status
+make dev-clean        # Kill stuck processes
+
+# Production (for testing/deployment)
+make prod-build       # Compile everything
+make prod-start       # Start compiled build
+make prod-stop        # Stop
+
+# General
+make stop             # Stop everything
+make status           # Show both modes
+make help             # All commands
+
+make dev          # Start
+make dev-logs     # Watch in another terminal
+# Edit files → auto-reload ✨
+make stop         # Stop
+
+make kill-all-ports
+make dev
+
+
+# Your services are already running! Check them:
+make dev-status
+
+# Watch the logs (in another terminal)
+make dev-logs
+
+# Open in browser
+open http://localhost:3001   # API
+open http://localhost:5176   # Frontend
+
+
+
+# Terminal 1: Keep development running
+make dev
+
+# Terminal 2: Watch logs
+make dev-logs
+
+# Terminal 3: Edit files and see changes
+cd apps/api-server/src
+# or
+cd apps/r3-agi/src
+
+# Edit a file → Save → Refresh browser → See changes ✨
+# (Auto-reload enabled)
+
+
+make stop
+
+
+# Make a change in your API
+vim apps/api-server/src/routes/something.ts
+# Save file
+# API automatically restarts ✨
+
+# Make a change in your frontend
+vim apps/r3-agi/src/App.tsx
+# Save file
+# Browser auto-refreshes (hot reload) ✨

@@ -1,0 +1,1000 @@
+================ App.tsx ================
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+
+interface Run {
+  id: string;
+  agent_id: string;
+  agent_version: string | null;
+  status: string;
+  input_json: string;
+  output_json: string | null;
+  error_message: string | null;
+  total_tokens: number;
+  correlation_id: string | null;
+  pipeline_run_id: string | null;
+  started_at: number | null;
+  completed_at: number | null;
+  created_at: number;
+}
+
+interface AgentEvent {
+  id: string;
+  run_id: string;
+  agent_id: string;
+  type: string;
+  data_json: string;
+  timestamp: number;
+  sequence_number: number;
+}
+
+interface Deployment {
+  id: string;
+  agent_id: string;
+  version: string;
+  status: string;
+  target: string;
+  rollback_of: string | null;
+  deployed_by: string | null;
+  deployed_at: number | null;
+  created_at: number;
+}
+
+interface ApprovalRequest {
+  id: string;
+  execution_id: string;
+  pipeline_run_id: string | null;
+  step_id: string;
+  status: string;
+  reason: string;
+  payload_json: string;
+  expires_at: number | null;
+  resolved_at: number | null;
+  resolved_by: string | null;
+  resolution_note: string | null;
+  created_at: number;
+}
+
+interface PipelineRun {
+  id: string;
+  pipeline_id: string;
+  pipeline_version: string | null;
+  status: string;
+  current_step_index: number;
+  total_tokens: number;
+  correlation_id: string | null;
+  started_at: number | null;
+  completed_at: number | null;
+  created_at: number;
+}
+
+interface Stats {
+  runs: { total: number; byStatus: Array<{ status: string; count: number }> };
+  tokens: { total: number };
+  events: { lastHour: number };
+  approvals?: { pending: number };
+  deployments?: { active: number };
+}
+
+const API = '/api';
+
+function useInterval(fn: () => void, ms: number) {
+  const cb = useRef(fn);
+  useEffect(() => { cb.current = fn; });
+  useEffect(() => {
+    const id = setInterval(() => cb.current(), ms);
+    return () => clearInterval(id);
+  }, [ms]);
+}
+
+const STATUS_COLOR: Record<string, string> = {
+  COMPLETED: '#22c55e',
+  FAILED: '#ef4444',
+  RUNNING: '#f59e0b',
+  PENDING: '#6366f1',
+  QUEUED: '#8b5cf6',
+  CREATED: '#64748b',
+  SCHEDULED: '#0ea5e9',
+  WAITING_APPROVAL: '#f59e0b',
+  WAITING_DELAY: '#94a3b8',
+  RESUMING: '#06b6d4',
+  CANCELLED: '#8888aa',
+  ACTIVE: '#22c55e',
+  INACTIVE: '#64748b',
+  ROLLED_BACK: '#8888aa',
+  ROLLING_BACK: '#f59e0b',
+  APPROVED: '#22c55e',
+  REJECTED: '#ef4444',
+  EXPIRED: '#8888aa',
+};
+
+const EVENT_COLOR: Record<string, string> = {
+  'run.started': '#6366f1',
+  'run.completed': '#22c55e',
+  'run.failed': '#ef4444',
+  'run.cancelled': '#8888aa',
+  'run.resuming': '#06b6d4',
+  'turn.started': '#3b82f6',
+  'turn.completed': '#06b6d4',
+  'tool.called': '#f59e0b',
+  'tool.result': '#22c55e',
+  'tool.error': '#ef4444',
+  'token.usage': '#8888aa',
+  'budget.warning': '#f59e0b',
+  'budget.exceeded': '#ef4444',
+  'approval.requested': '#f59e0b',
+  'approval.resolved': '#22c55e',
+  'approval.expired': '#ef4444',
+  'execution.waiting': '#94a3b8',
+};
+
+function Badge({ status }: { status: string }) {
+  const color = STATUS_COLOR[status] ?? '#8888aa';
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 4,
+      fontSize: 11,
+      fontWeight: 600,
+      background: color + '22',
+      color,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase',
+    }}>
+      {status}
+    </span>
+  );
+}
+
+function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return (
+    <div style={{
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius)',
+      padding: '16px 20px',
+      flex: 1,
+      minWidth: 120,
+    }}>
+      <div style={{ color: 'var(--text2)', fontSize: 11, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--accent2)' }}>{value}</div>
+      {sub && <div style={{ color: 'var(--text2)', fontSize: 11, marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function RunRow({ run, selected, onClick }: { run: Run; selected: boolean; onClick: () => void }) {
+  const dur = run.completed_at && run.started_at
+    ? ((run.completed_at - run.started_at) / 1000).toFixed(1) + 's'
+    : run.status === 'RUNNING' ? '…' : '—';
+
+  return (
+    <tr
+      onClick={onClick}
+      style={{
+        cursor: 'pointer',
+        background: selected ? 'var(--bg3)' : 'transparent',
+        borderBottom: '1px solid var(--border)',
+        transition: 'background 0.1s',
+      }}
+    >
+      <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent2)' }}>
+        {run.id.slice(0, 8)}
+      </td>
+      <td style={{ padding: '10px 16px', color: 'var(--text2)', fontSize: 13 }}>{run.agent_id}</td>
+      <td style={{ padding: '10px 16px' }}><Badge status={run.status} /></td>
+      <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text2)' }}>
+        {(run.total_tokens ?? 0).toLocaleString()}
+      </td>
+      <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text2)' }}>{dur}</td>
+      <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)' }}>
+        {run.created_at ? new Date(run.created_at).toLocaleTimeString() : '—'}
+      </td>
+    </tr>
+  );
+}
+
+function EventRow({ event }: { event: AgentEvent }) {
+  const color = EVENT_COLOR[event.type] ?? '#8888aa';
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(event.data_json) as Record<string, unknown>; } catch { /* empty */ }
+  const preview = Object.keys(data).length > 0 ? JSON.stringify(data).slice(0, 100) : '';
+
+  return (
+    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+      <td style={{ padding: '8px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text2)' }}>
+        {event.timestamp ? new Date(event.timestamp).toISOString().slice(11, 23) : '—'}
+      </td>
+      <td style={{ padding: '8px 16px' }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 11, color,
+          background: color + '18', padding: '2px 6px', borderRadius: 3,
+        }}>{event.type}</span>
+      </td>
+      <td style={{ padding: '8px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text2)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {preview}
+      </td>
+    </tr>
+  );
+}
+
+function DeploymentsView({ deployments, onRefresh }: { deployments: Deployment[]; onRefresh: () => void }) {
+  const [rolling, setRolling] = useState<string | null>(null);
+
+  const handleRollback = async (id: string) => {
+    if (!confirm(`Roll back deployment ${id.slice(0, 8)}?`)) return;
+    setRolling(id);
+    try {
+      const r = await fetch(`${API}/deployments/${id}/rollback`, { method: 'POST' });
+      if (!r.ok) {
+        const err = await r.json() as { error: string };
+        alert(`Rollback failed: ${err.error}`);
+      }
+      onRefresh();
+    } catch (err) {
+      alert(`Rollback failed: ${String(err)}`);
+    } finally {
+      setRolling(null);
+    }
+  };
+
+  const createDemo = async () => {
+    await fetch(`${API}/deployments/demo`, { method: 'POST' });
+    onRefresh();
+  };
+
+  return (
+    <div>
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ color: 'var(--text2)', fontSize: 13 }}>Deployment history with rollback support</span>
+        <button onClick={createDemo} style={{ marginLeft: 'auto', padding: '5px 12px', background: 'var(--accent)', color: '#fff', borderRadius: 5, fontSize: 12, fontWeight: 600 }}>
+          + Demo Deployment
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
+            {['ID', 'Agent', 'Version', 'Status', 'Target', 'Deployed By', 'Created', 'Actions'].map(h => (
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: 'var(--text2)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {deployments.length === 0 ? (
+            <tr><td colSpan={8} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text2)' }}>
+              No deployments. Click <strong>+ Demo Deployment</strong> to create one.
+            </td></tr>
+          ) : deployments.map(dep => (
+            <tr key={dep.id} style={{ borderBottom: '1px solid var(--border)' }}>
+              <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent2)' }}>{dep.id.slice(0, 8)}</td>
+              <td style={{ padding: '10px 16px', fontSize: 13, color: 'var(--text2)' }}>{dep.agent_id}</td>
+              <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>v{dep.version}</td>
+              <td style={{ padding: '10px 16px' }}><Badge status={dep.status} /></td>
+              <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)' }}>{dep.target}</td>
+              <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)' }}>{dep.deployed_by ?? '—'}</td>
+              <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)' }}>
+                {new Date(dep.created_at).toLocaleString()}
+              </td>
+              <td style={{ padding: '10px 16px' }}>
+                {dep.status === 'ACTIVE' && (
+                  <button
+                    onClick={() => void handleRollback(dep.id)}
+                    disabled={rolling === dep.id}
+                    style={{
+                      padding: '3px 10px',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: '#f97316',
+                      background: '#f9731611',
+                      border: '1px solid #f9731644',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {rolling === dep.id ? '…' : 'Rollback'}
+                  </button>
+                )}
+                {dep.rollback_of && (
+                  <span style={{ fontSize: 10, color: 'var(--text2)' }}>↩ {dep.rollback_of.slice(0, 6)}</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ApprovalsView({ approvals, onRefresh }: { approvals: ApprovalRequest[]; onRefresh: () => void }) {
+  const [resolving, setResolving] = useState<string | null>(null);
+
+  const resolve = async (id: string, decision: 'APPROVED' | 'REJECTED') => {
+    setResolving(id);
+    try {
+      const r = await fetch(`${API}/approvals/${id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, resolvedBy: 'dashboard-user' }),
+      });
+      if (!r.ok) {
+        const err = await r.json() as { error: string };
+        alert(`Failed: ${err.error}`);
+      }
+      onRefresh();
+    } catch (err) {
+      alert(`Failed: ${String(err)}`);
+    } finally {
+      setResolving(null);
+    }
+  };
+
+  const createDemo = async () => {
+    await fetch(`${API}/approvals/demo`, { method: 'POST' });
+    onRefresh();
+  };
+
+  const pending = approvals.filter(a => a.status === 'PENDING').length;
+
+  return (
+    <div>
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ color: 'var(--text2)', fontSize: 13 }}>
+          {pending > 0 ? <span style={{ color: '#f59e0b', fontWeight: 600 }}>⚠ {pending} pending approval{pending !== 1 ? 's' : ''} require action</span> : 'Approval queue — all clear'}
+        </span>
+        <button onClick={createDemo} style={{ marginLeft: 'auto', padding: '5px 12px', background: 'var(--accent)', color: '#fff', borderRadius: 5, fontSize: 12, fontWeight: 600 }}>
+          + Demo Approval
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
+            {['ID', 'Execution', 'Step', 'Reason', 'Status', 'Expires', 'Resolved By', 'Actions'].map(h => (
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: 'var(--text2)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {approvals.length === 0 ? (
+            <tr><td colSpan={8} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text2)' }}>
+              No approval requests. Click <strong>+ Demo Approval</strong> to create one.
+            </td></tr>
+          ) : approvals.map(a => {
+            const expired = a.expires_at && a.expires_at < Date.now();
+            return (
+              <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', background: a.status === 'PENDING' && !expired ? '#f59e0b08' : 'transparent' }}>
+                <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent2)' }}>{a.id.slice(0, 8)}</td>
+                <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text2)' }}>{a.execution_id.slice(0, 8)}</td>
+                <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{a.step_id}</td>
+                <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.reason}</td>
+                <td style={{ padding: '10px 16px' }}><Badge status={expired && a.status === 'PENDING' ? 'EXPIRED' : a.status} /></td>
+                <td style={{ padding: '10px 16px', fontSize: 11, color: expired ? '#ef4444' : 'var(--text2)' }}>
+                  {a.expires_at ? new Date(a.expires_at).toLocaleString() : '—'}
+                </td>
+                <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)' }}>{a.resolved_by ?? '—'}</td>
+                <td style={{ padding: '10px 16px', display: 'flex', gap: 6 }}>
+                  {a.status === 'PENDING' && !expired && (
+                    <>
+                      <button
+                        onClick={() => void resolve(a.id, 'APPROVED')}
+                        disabled={resolving === a.id}
+                        style={{ padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#22c55e', background: '#22c55e11', border: '1px solid #22c55e44', borderRadius: 4, cursor: 'pointer' }}
+                      >
+                        {resolving === a.id ? '…' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={() => void resolve(a.id, 'REJECTED')}
+                        disabled={resolving === a.id}
+                        style={{ padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#ef4444', background: '#ef444411', border: '1px solid #ef444444', borderRadius: 4, cursor: 'pointer' }}
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function PipelinesView({ pipelines }: { pipelines: PipelineRun[] }) {
+  return (
+    <div>
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)' }}>
+        <span style={{ color: 'var(--text2)', fontSize: 13 }}>Recent pipeline runs</span>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
+            {['Run ID', 'Pipeline', 'Version', 'Status', 'Step', 'Tokens', 'Created'].map(h => (
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: 'var(--text2)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {pipelines.length === 0 ? (
+            <tr><td colSpan={7} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text2)' }}>
+              No pipeline runs yet.
+            </td></tr>
+          ) : pipelines.map(p => (
+            <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
+              <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent2)' }}>{p.id.slice(0, 8)}</td>
+              <td style={{ padding: '10px 16px', fontSize: 13, color: 'var(--text2)' }}>{p.pipeline_id}</td>
+              <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.pipeline_version ?? '—'}</td>
+              <td style={{ padding: '10px 16px' }}><Badge status={p.status} /></td>
+              <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>#{p.current_step_index}</td>
+              <td style={{ padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text2)' }}>{(p.total_tokens ?? 0).toLocaleString()}</td>
+              <td style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text2)' }}>{new Date(p.created_at).toLocaleTimeString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+type Tab = 'runs' | 'events' | 'pipelines' | 'deployments' | 'approvals';
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>('runs');
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [events, setEvents] = useState<AgentEvent[]>([]);
+  const [pipelines, setPipelines] = useState<PipelineRun[]>([]);
+  const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [selectedRun, setSelectedRun] = useState<Run | null>(null);
+  const [runEvents, setRunEvents] = useState<AgentEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [liveIndicator, setLiveIndicator] = useState(false);
+
+  const fetchRuns = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/runs?limit=50`);
+      if (r.ok) setRuns(await r.json() as Run[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/events?limit=100`);
+      if (r.ok) setEvents(await r.json() as AgentEvent[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchPipelines = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/pipelines`);
+      if (r.ok) setPipelines(await r.json() as PipelineRun[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchDeployments = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/deployments`);
+      if (r.ok) setDeployments(await r.json() as Deployment[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchApprovals = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/approvals`);
+      if (r.ok) setApprovals(await r.json() as ApprovalRequest[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/stats`);
+      if (r.ok) setStats(await r.json() as Stats);
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchRunEvents = useCallback(async (runId: string) => {
+    try {
+      const r = await fetch(`${API}/runs/${runId}/events`);
+      if (r.ok) setRunEvents(await r.json() as AgentEvent[]);
+    } catch { /* ignore */ }
+  }, []);
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([fetchRuns(), fetchStats(), fetchDeployments(), fetchApprovals(), fetchPipelines()]);
+  }, [fetchRuns, fetchStats, fetchDeployments, fetchApprovals, fetchPipelines]);
+
+  useEffect(() => {
+    Promise.all([fetchRuns(), fetchEvents(), fetchStats(), fetchDeployments(), fetchApprovals(), fetchPipelines()])
+      .finally(() => setLoading(false));
+  }, [fetchRuns, fetchEvents, fetchStats, fetchDeployments, fetchApprovals, fetchPipelines]);
+
+  useInterval(() => {
+    void fetchRuns();
+    void fetchStats();
+    if (tab === 'approvals') void fetchApprovals();
+    if (tab === 'deployments') void fetchDeployments();
+    if (tab === 'pipelines') void fetchPipelines();
+  }, 5000);
+
+  useEffect(() => {
+    const es = new EventSource(`${API}/sse`);
+    es.onmessage = (e) => {
+      try {
+        JSON.parse(e.data);
+        setLiveIndicator(true);
+        setTimeout(() => setLiveIndicator(false), 800);
+        void fetchRuns();
+        void fetchStats();
+        void fetchApprovals();
+      } catch { /* ignore */ }
+    };
+    return () => es.close();
+  }, [fetchRuns, fetchStats, fetchApprovals]);
+
+  useEffect(() => {
+    if (selectedRun) void fetchRunEvents(selectedRun.id);
+  }, [selectedRun, fetchRunEvents]);
+
+  const handleSelectRun = (run: Run) => {
+    setSelectedRun(prev => prev?.id === run.id ? null : run);
+  };
+
+  const spawnDemo = async () => {
+    await fetch(`${API}/runs/demo`, { method: 'POST' });
+    await Promise.all([fetchRuns(), fetchStats(), fetchEvents()]);
+  };
+
+  const statusCounts = stats?.runs.byStatus ?? [];
+  const getCount = (s: string) => statusCounts.find(x => x.status === s)?.count ?? 0;
+  const pendingApprovals = stats?.approvals?.pending ?? 0;
+
+  const TABS: Array<{ key: Tab; label: string; badge?: number }> = [
+    { key: 'runs', label: 'Runs' },
+    { key: 'events', label: 'Events' },
+    { key: 'pipelines', label: 'Pipelines' },
+    { key: 'deployments', label: 'Deployments' },
+    { key: 'approvals', label: 'Approvals', badge: pendingApprovals > 0 ? pendingApprovals : undefined },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <header style={{
+        background: 'var(--bg2)',
+        borderBottom: '1px solid var(--border)',
+        padding: '0 24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        height: 56,
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: 6,
+            background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, fontWeight: 700,
+          }}>A</div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em' }}>Agent-OS</div>
+            <div style={{ fontSize: 10, color: 'var(--text2)', letterSpacing: '0.04em' }}>v3.0.0 · M0</div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: liveIndicator ? '#22c55e' : '#3f3f52',
+            transition: 'background 0.3s',
+            display: 'inline-block',
+          }} />
+          <span style={{ fontSize: 11, color: 'var(--text2)' }}>LIVE</span>
+        </div>
+
+        <button
+          onClick={() => void spawnDemo()}
+          style={{
+            padding: '6px 14px',
+            background: 'var(--accent)',
+            color: '#fff',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          + Demo Run
+        </button>
+      </header>
+
+      <div style={{
+        background: 'var(--bg)',
+        borderBottom: '1px solid var(--border)',
+        padding: '10px 24px',
+        display: 'flex',
+        gap: 10,
+        flexShrink: 0,
+        overflowX: 'auto',
+      }}>
+        <StatCard label="Total Runs" value={stats?.runs.total ?? 0} />
+        <StatCard label="Completed" value={getCount('COMPLETED')} sub="successful" />
+        <StatCard label="Failed" value={getCount('FAILED')} sub="errors" />
+        <StatCard label="Running" value={getCount('RUNNING')} sub="active" />
+        <StatCard label="Total Tokens" value={(stats?.tokens.total ?? 0).toLocaleString()} sub="all time" />
+        <StatCard label="Events/h" value={stats?.events.lastHour ?? 0} sub="last hour" />
+        <StatCard label="Approvals" value={pendingApprovals} sub="pending" />
+        <StatCard label="Deployments" value={stats?.deployments?.active ?? 0} sub="active" />
+      </div>
+
+      <div style={{
+        background: 'var(--bg2)',
+        borderBottom: '1px solid var(--border)',
+        padding: '0 24px',
+        display: 'flex',
+        gap: 0,
+        flexShrink: 0,
+      }}>
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{
+              padding: '12px 18px',
+              fontSize: 13,
+              fontWeight: 600,
+              color: tab === t.key ? 'var(--accent2)' : 'var(--text2)',
+              borderBottom: tab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
+              textTransform: 'capitalize',
+              transition: 'color 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            {t.label}
+            {t.badge !== undefined && (
+              <span style={{
+                background: '#f59e0b',
+                color: '#000',
+                borderRadius: 8,
+                fontSize: 10,
+                fontWeight: 700,
+                padding: '1px 5px',
+                minWidth: 16,
+                textAlign: 'center',
+              }}>{t.badge}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div style={{ flex: selectedRun && tab === 'runs' ? '0 0 55%' : 1, overflow: 'auto' }}>
+          {loading ? (
+            <div style={{ padding: 48, textAlign: 'center', color: 'var(--text2)' }}>Loading…</div>
+          ) : tab === 'runs' ? (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
+                  {['Run ID', 'Agent', 'Status', 'Tokens', 'Duration', 'Created'].map(h => (
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: 'var(--text2)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {runs.length === 0 ? (
+                  <tr><td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text2)' }}>
+                    No runs yet. Click <strong>+ Demo Run</strong> to create one.
+                  </td></tr>
+                ) : runs.map(run => (
+                  <RunRow
+                    key={run.id}
+                    run={run}
+                    selected={selectedRun?.id === run.id}
+                    onClick={() => handleSelectRun(run)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          ) : tab === 'events' ? (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
+                  {['Time', 'Event Type', 'Data'].map(h => (
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: 'var(--text2)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.length === 0 ? (
+                  <tr><td colSpan={3} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text2)' }}>No events yet.</td></tr>
+                ) : events.map(ev => <EventRow key={ev.id} event={ev} />)}
+              </tbody>
+            </table>
+          ) : tab === 'pipelines' ? (
+            <PipelinesView pipelines={pipelines} />
+          ) : tab === 'deployments' ? (
+            <DeploymentsView deployments={deployments} onRefresh={() => void refreshAll()} />
+          ) : (
+            <ApprovalsView approvals={approvals} onRefresh={() => void refreshAll()} />
+          )}
+        </div>
+
+        {selectedRun && tab === 'runs' && (
+          <div style={{
+            flex: '0 0 45%',
+            background: 'var(--bg2)',
+            borderLeft: '1px solid var(--border)',
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Run Detail</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent2)', marginTop: 2 }}>
+                  {selectedRun.id}
+                </div>
+              </div>
+              <button onClick={() => setSelectedRun(null)} style={{ color: 'var(--text2)', fontSize: 18 }}>×</button>
+            </div>
+
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {[
+                  ['Agent', selectedRun.agent_id],
+                  ['Status', ''],
+                  ['Tokens', (selectedRun.total_tokens ?? 0).toLocaleString()],
+                  ['Version', selectedRun.agent_version ?? '—'],
+                  ['Created', selectedRun.created_at ? new Date(selectedRun.created_at).toLocaleString() : '—'],
+                  ['Correlation', selectedRun.correlation_id ? selectedRun.correlation_id.slice(0, 12) + '…' : '—'],
+                ].map(([label, value], i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+                    {label === 'Status' ? <Badge status={selectedRun.status} /> : <div style={{ fontSize: 13, fontFamily: label === 'Correlation' ? 'var(--font-mono)' : undefined }}>{value}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedRun.output_json && (
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Output</div>
+                <pre style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text)',
+                  background: 'var(--bg3)', padding: 12, borderRadius: 6,
+                  overflow: 'auto', maxHeight: 120, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                }}>
+                  {(() => { try { return JSON.stringify(JSON.parse(selectedRun.output_json!), null, 2); } catch { return selectedRun.output_json; } })()}
+                </pre>
+              </div>
+            )}
+
+            {selectedRun.error_message && (
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: '#ef4444', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Error</div>
+                <pre style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ef4444',
+                  background: '#ef444411', padding: 12, borderRadius: 6,
+                  overflow: 'auto', maxHeight: 100, whiteSpace: 'pre-wrap',
+                }}>
+                  {selectedRun.error_message}
+                </pre>
+              </div>
+            )}
+
+            <div style={{ padding: '16px 20px', flex: 1 }}>
+              <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Events ({runEvents.length})
+              </div>
+              {runEvents.length === 0 ? (
+                <div style={{ color: 'var(--text2)', fontSize: 13 }}>No events</div>
+              ) : runEvents.map(ev => {
+                const color = EVENT_COLOR[ev.type] ?? '#8888aa';
+                let data: Record<string, unknown> = {};
+                try { data = JSON.parse(ev.data_json) as Record<string, unknown>; } catch { /* empty */ }
+
+                return (
+                  <div key={ev.id} style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, marginTop: 5, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color }}>{ev.type}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text2)' }}>
+                          {ev.timestamp ? new Date(ev.timestamp).toISOString().slice(11, 23) : ''}
+                        </span>
+                      </div>
+                      {Object.keys(data).length > 0 && (
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text2)', marginTop: 2 }}>
+                          {JSON.stringify(data).slice(0, 120)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/*
+===============================================================================
+ENTERPRISE MIGRATION NOTES
+===============================================================================
+
+SAFE ENTERPRISE REFACTOR INITIALIZED (v2.1.0)
+
+Current operational dashboard preserved intentionally.
+
+New architecture is ready in parallel:
+  • src/components/ui/       - Reusable UI primitives
+  • src/components/layout/   - Shell, sidebar, header
+  • src/hooks/               - useSSE, useQuery patterns
+  • src/lib/theme.ts         - Centralized theming
+  • src/types/runtime.ts     - Shared type definitions
+  • src/providers/           - React Query, routing setup
+  • src/pages/               - Page components
+
+MIGRATION PATH:
+1. Gradually import new components from src/components/ui/
+2. Replace individual dashboard sections incrementally
+3. Introduce Shell layout when ready
+4. Add routes to App.tsx when comfortable
+5. Remove TODO comment when complete
+
+DO NOT DELETE THIS FILE UNTIL MIGRATION IS COMPLETE.
+
+See backup at: src/App.original.tsx
+
+TODO: MIGRATE_INCREMENTALLY
+===============================================================================
+*/
+
+================ Overview.tsx ================
+import { Panel } from '../components/ui/Panel'
+import { Stat } from '../components/ui/Stat'
+import { Activity, Zap, MessageSquare, Bot } from 'lucide-react'
+
+export default function Overview() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
+        <Panel>
+          <Stat
+            label="Status"
+            value="Healthy"
+            icon={<Activity size={24} />}
+          />
+        </Panel>
+
+        <Panel>
+          <Stat
+            label="Total Runs"
+            value="382"
+            subtext="Last 24h"
+            icon={<Zap size={24} />}
+          />
+        </Panel>
+
+        <Panel>
+          <Stat
+            label="Events"
+            value="1248"
+            subtext="Last hour"
+            icon={<MessageSquare size={24} />}
+          />
+        </Panel>
+
+        <Panel>
+          <Stat
+            label="Active Agents"
+            value="12"
+            icon={<Bot size={24} />}
+          />
+        </Panel>
+      </div>
+
+      <Panel title="Recent Runs">
+        <div className="text-center py-12 text-muted">
+          No runs yet. Dashboard is ready for data.
+        </div>
+      </Panel>
+    </div>
+  )
+}
+
+================ Header.tsx ================
+import { ReactNode } from 'react'
+
+interface HeaderProps {
+  title: string
+  actions?: ReactNode
+}
+
+export function Header({ title, actions }: HeaderProps) {
+  return (
+    <header className="flex h-16 items-center justify-between border-b border-border bg-panel px-6">
+      <h1 className="text-lg font-semibold">
+        {title}
+      </h1>
+      {actions && (
+        <div className="flex gap-3">
+          {actions}
+        </div>
+      )}
+    </header>
+  )
+}
+
+================ Sidebar.tsx ================
+import { ReactNode } from 'react'
+
+interface SidebarProps {
+  children?: ReactNode
+}
+
+export function Sidebar({ children }: SidebarProps) {
+  return (
+    <aside className="w-64 border-r border-border bg-panel">
+      <div className="p-6">
+        <h1 className="text-xl font-bold">
+          Agent-OS
+        </h1>
+      </div>
+      {children && (
+        <nav className="px-4 py-6">
+          {children}
+        </nav>
+      )}
+    </aside>
+  )
+}
+
+================ Shell.tsx ================
+import { ReactNode } from 'react'
+
+import { Sidebar } from './Sidebar'
+import { Header } from './Header'
+
+interface ShellProps {
+  children: ReactNode
+  sidebarContent?: ReactNode
+  headerTitle?: string
+  headerActions?: ReactNode
+}
+
+export function Shell({
+  children,
+  sidebarContent,
+  headerTitle = 'Runtime Dashboard',
+  headerActions,
+}: ShellProps) {
+  return (
+    <div className="flex h-full">
+      <Sidebar>{sidebarContent}</Sidebar>
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Header title={headerTitle} actions={headerActions} />
+
+        <main className="flex-1 overflow-auto bg-bg p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
+
+================ Panel.tsx ================
+import { ReactNode } from 'react'

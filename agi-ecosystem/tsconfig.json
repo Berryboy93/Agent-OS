@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@agi-ecosystem/*": ["packages/*/src"]
+    }
+  },
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/dag-compiler" },
+    { "path": "./packages/event-store" },
+    { "path": "./packages/mythos-engine" },
+    { "path": "./packages/mythos" },
+    { "path": "./packages/simulation" }
+  ]
+}

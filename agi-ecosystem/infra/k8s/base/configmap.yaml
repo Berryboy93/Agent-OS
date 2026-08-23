@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agi-config
+  namespace: agi-ecosystem
+data:
+  # DAG Compiler config
+  DAG_COMPILER_MAX_DEPTH: "10"
+  DAG_COMPILER_MAX_NODES: "1000"
+
+  # Agent OS Runtime config
+  AGENT_SANDBOX_TIMEOUT_MS: "30000"
+  AGENT_SANDBOX_MEMORY_MB: "256"
+  AGENT_SANDBOX_CPU_LIMIT: "50"
+
+  # Mythos Policy Engine config
+  MYTHOS_POLICY_CACHE_TTL: "60"
+  MYTHOS_DEFAULT_RULESET: "safety,audit,rate-limit"
+
+  # Event Store config
+  EVENT_STORE_BATCH_SIZE: "1000"
+  EVENT_STORE_FLUSH_INTERVAL_MS: "1000"
+
+  # Swarm Runtime config
+  SWARM_MAX_AGENTS: "10"
+  SWARM_FAULT_TOLERANCE: "strict"
+
+  # Simulation Engine config
+  SIM_MAX_BRANCHES: "20"
+  SIM_MAX_DEPTH: "2"
+
+  # Civilization Orchestrator config
+  CIV_MAX_CONCURRENT_GOALS: "5"
+  CIV_CHECKPOINT_INTERVAL_MS: "30000"

@@ -1,0 +1,141 @@
+.
+├── agent-dashboard.sh
+├── agent-os-enterprise-refactor.sh
+├── apply-targeted-patch.sh
+├── archive
+│   ├── audits
+│   ├── backups
+│   ├── docker
+│   ├── fix-scripts
+│   │   ├── fix-agi-suite.sh
+│   │   └── fix-stable.sh
+│   ├── legacy-scripts
+│   ├── lockfiles
+│   ├── package-json
+│   └── tsconfig
+├── .audit
+│   ├── api
+│   │   ├── events.json
+│   │   ├── health.json
+│   │   ├── runs.json
+│   │   └── stats.json
+│   ├── build.log
+│   ├── circular-deps.txt
+│   ├── dead-exports.txt
+│   ├── fetch.txt
+│   ├── file-sizes.txt
+│   ├── project-inventory.txt
+│   ├── refactor-manifest.md
+│   ├── sse.txt
+│   ├── typescript-errors.txt
+│   ├── useeffect.txt
+│   └── usestate.txt
+├── build.sh
+├── CHANGELOG-v2.0.0-to-v2.1.0.md
+├── create-examples.sh
+├── dashboard-audit-results.tar.gz
+├── dashboard-audit.txt
+├── dashboard_inventory.txt
+├── dashboard.log
+├── dashboard-part-aa
+├── dashboard-part-ab
+├── dashboard-tree.txt
+├── dashboard_tree.txt
+├── .eslintignore
+├── .eslintrc.json
+├── expert-integrate.sh
+├── full-source-audit.txt
+├── generate_app_tsx_complete.py
+├── generate_app_tsx_fixed1.py
+├── implementv1.sh
+├── implementv2.sh
+├── index.html
+├── index.html.bak.1780631709
+├── index.html.bak.1780632489
+├── index.html.bak.1780632556
+├── index.html.bak.1780633860
+├── index.html.bak.1780635581
+├── install.sh
+├── load-env.ts
+├── logs
+├── MIGRATION-GUIDE.md
+├── package.json
+├── package.txt
+├── postcss.config.mjs
+├── public
+│   ├── favicon.ico
+│   ├── favicon.png
+│   └── logo.png
+├── server.ts
+├── server.ts.bak
+├── server.txt
+├── src
+│   ├── App.tsx
+│   ├── App.tsx.backup.old
+│   ├── App.tsx.bak.1780631709
+│   ├── App.tsx.bak.1780632489
+│   ├── App.tsx.bak.1780632556
+│   ├── App.tsx.bak.1780635581
+│   ├── App.tsx.bak.1780638755
+│   ├── components
+│   │   ├── layout
+│   │   │   ├── Header.tsx
+│   │   │   ├── Shell.tsx
+│   │   │   └── Sidebar.tsx
+│   │   └── ui
+│   │       ├── Badge.tsx
+│   │       ├── Panel.tsx
+│   │       └── Stat.tsx
+│   ├── ConnectedApp.tsx
+│   ├── examples
+│   │   ├── AllExamples.tsx
+│   │   ├── ApprovalsPanel.tsx
+│   │   ├── ConnectionStatus.tsx
+│   │   ├── DemoActions.tsx
+│   │   ├── DeploymentsList.tsx
+│   │   ├── index.ts
+│   │   ├── LiveEvents.tsx
+│   │   ├── RunsList.tsx
+│   │   └── StatsOverview.tsx
+│   ├── hooks
+│   │   ├── useApi.ts
+│   │   ├── useSSE.ts
+│   │   └── useSSE.ts.bak.1780638755
+│   ├── index.css
+│   ├── index.css.backup.old
+│   ├── index.css.bak.1780631709
+│   ├── index.css.bak.1780632489
+│   ├── index.css.bak.1780632556
+│   ├── index.css.bak.1780635581
+│   ├── lib
+│   │   ├── api.ts
+│   │   ├── auth.ts
+│   │   └── theme.ts
+│   ├── main.tsx
+│   ├── main.tsx.bak.1780631709
+│   ├── main.tsx.bak.1780632489
+│   ├── main.tsx.bak.1780632556
+│   ├── main.tsx.bak.1780635581
+│   ├── main.tsx.bak.1780638755
+│   ├── main.tsx.bak.1780640273
+│   ├── pages
+│   │   └── Overview.tsx
+│   ├── providers
+│   │   └── QueryProvider.tsx.bak.1780638755
+│   ├── services
+│   └── types
+│       └── runtime.ts
+├── tools
+│   └── archive
+│       └── fix-agent-os.sh
+├── triple-check-install.sh
+├── tsconfig.json
+├── tsconfig.txt
+├── verify-tier-stack.sh
+├── vite.config.ts
+├── vite.config.ts.bak.1780636035
+├── vite.config.ts.bak.1780638755
+├── vite.config.ts.bak.1780640273
+└── vite.txt
+
+27 directories, 112 files

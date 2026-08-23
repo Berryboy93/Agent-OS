@@ -1,0 +1,38 @@
+cd ~/Stable/server
+
+export DATABASE_URL="postgresql://r3:r3vibe@localhost:5432/r3vibe"
+
+# List all tables
+psql "$DATABASE_URL" -c "\dt" | grep -i migration
+
+# Or show ALL tables
+psql "$DATABASE_URL" -c "\dt"
+
+# Then query with the correct name
+psql "$DATABASE_URL" -c "SELECT * FROM __drizzle_migrations LIMIT 5;" 2>/dev/null || \
+psql "$DATABASE_URL" -c "SELECT * FROM drizzle_migrations LIMIT 5;" 2>/dev/null || \
+psql "$DATABASE_URL" -c "\dt public.*"
+
+
+
+--------------------------------------------------------------------------------
+
+cd ~/Stable/server
+
+export DATABASE_URL="postgresql://r3:r3vibe@localhost:5432/r3vibe"
+
+# Check userId columns (should be NOT NULL after 0005 fix per SECURITY.md)
+psql "$DATABASE_URL" -c "
+  SELECT table_name, column_name, is_nullable, data_type 
+  FROM information_schema.columns 
+  WHERE table_name IN ('users', 'sessions', 'projects') 
+  AND column_name = 'user_id'
+  ORDER BY table_name;
+"
+
+# Check ai_decision_log structure (note: no userId yet, per SECURITY.md F-09 deferred)
+psql "$DATABASE_URL" -c "\d ai_decision_log"
+
+
+--------------------------------------------------------------------------------
+

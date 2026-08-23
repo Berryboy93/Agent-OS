@@ -1,0 +1,23 @@
+# ~/Agi-Suite/pnpm-workspace.yaml
+#
+# Cross-monorepo workspace link: allows Agi-Suite packages to import
+# @r3/api-types (types only) from the Stable monorepo without publishing.
+#
+# REQUIREMENT: Both repos must be siblings on disk:
+#   ~/Stable/      ← R3v4 monorepo
+#   ~/Agi-Suite/   ← this monorepo
+#
+# After editing this file, run: pnpm install (from ~/Agi-Suite root)
+
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+catalog:
+  # Cross-monorepo type bridge — zero runtime, types only
+  '@r3/api-types': 'workspace:*'
+
+# Workspace link to Stable's shared-types package
+# pnpm resolves this at install time via the path entry
+workspaceLinks:
+  - path: '../Stable/packages/r3-api-types'

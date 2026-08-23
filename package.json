@@ -1,0 +1,21 @@
+{
+  "name": "agent-os-ecosystem",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "test": "pnpm -r test",
+    "tsc": "pnpm -r tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.14",
+    "dotenv": "^16.6.1",
+    "tsx": "^4.22.3",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@types/better-sqlite3": "^7.6.13"
+  }
+}

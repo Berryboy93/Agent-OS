@@ -1,0 +1,4 @@
+[1G[0K⠙[1G[0K⠹[1G[0K⠸[1G[0K⠼[1G[0K⠴[1G[0K⠦[1G[0KAgent-OS Dashboard running on port 5000
+DB: /home/runner/workspace/agent-os.db
+Frontend: static build
+EventStore: active with 5-stage redaction

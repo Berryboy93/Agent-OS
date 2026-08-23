@@ -1,0 +1,26 @@
+# KEDA for event-driven autoscaling
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: agent-os-keda
+  namespace: agi-ecosystem
+spec:
+  scaleTargetRef:
+    name: agent-os-runtime
+  pollingInterval: 15
+  cooldownPeriod: 300
+  minReplicaCount: 5
+  maxReplicaCount: 100
+  triggers:
+  - type: redis
+    metadata:
+      address: redis:6379
+      listName: dag-execution
+      listLength: "5"
+      activationListLength: "1"
+  - type: kafka
+    metadata:
+      bootstrapServers: kafka:9092
+      consumerGroup: dag-execution-group
+      topic: dag-execution
+      lagThreshold: "10"

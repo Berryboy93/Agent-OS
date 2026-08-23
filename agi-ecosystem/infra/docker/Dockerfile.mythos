@@ -1,0 +1,25 @@
+# Multi-stage build for Mythos Policy Engine
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN npm install -g pnpm
+COPY package.json pnpm-workspace.yaml tsconfig.json ./
+COPY packages/mythos-policy-engine/package.json packages/mythos-policy-engine/
+COPY packages/dag-compiler/package.json packages/dag-compiler/
+COPY packages/event-store/package.json packages/event-store/
+COPY packages/shared/package.json packages/shared/
+RUN pnpm install --no-frozen-lockfile
+COPY . .
+RUN pnpm --filter @agi-ecosystem/mythos-policy-engine build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache dumb-init
+ENV NODE_ENV=production
+COPY --from=builder /app/packages/mythos-policy-engine/dist ./dist
+COPY --from=builder /app/packages/mythos-policy-engine/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+USER node
+EXPOSE 8080
+HEALTHCHECK --interval=5s --timeout=3s --start-period=3s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+CMD ["dumb-init", "node", "dist/index.js"]

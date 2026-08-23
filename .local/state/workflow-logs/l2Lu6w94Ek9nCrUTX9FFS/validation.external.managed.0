@@ -1,0 +1,39 @@
+VERDICT: REJECTED
+The diff does not satisfy core M0 runtime requirements; it introduces useful scaffolding but misses multiple blocking deliverables from the milestone definition.
+
+Critical findings:
+- Scheduler architecture is not BullMQ/Redis. `packages/runtime/src/scheduler.ts` implements an in-memory queue (`InMemoryScheduler`), and there is no implemented `@agent-os/scheduler` package with BullMQ queues (`executions`, `delayed`, `approvals`, `replay`, `cleanup`). This is a direct miss against the central M0 requirement.
+- Required monorepo restructure was not performed. Workspace remains `packages/*` and `apps/*` (`pnpm-workspace.yaml`), not `packages/agent-os/packages/*` and `packages/agent-os/apps/*`.
+- Runtime commit/recovery semantics are incomplete. Worker events/checkpoints are written, but the required four-phase step commit (event -> checkpoint -> agent_state commit -> BullMQ ACK) is not implemented end-to-end; no BullMQ ACK exists; `agent_state` is not committed per step boundary in runtime flow.
+VERDICT: REJECTED
+- Crash recovery is partial and not startup-wired. `recoverCrashedRuns()` exists, but dashboard startup only updates statuses to `RESUMING` and does not re-enqueue/resume execution thThe diff does not satisfy core M0 runtime requirements; it introduces useful scaffolding but misses multiple blocking deliverables from the milestone definition.
+rough a durable queue.
+- Memory requirement m
+iss: session memory is in-process `Map` (`packages/meCritical findings:
+mory/src/session-memory.ts`), not Redis SET with TTL.
+- DB r- Scheduler architecture is not BullMQ/Redis. `packages/runtime/src/scheduler.ts` implements an in-memory queue (`InMemoryScheduler`), and there is no implemented `@agent-os/scheduler` package with BullMQ queues (`executions`, `delayed`, `approvals`, `replay`, `cleanup`). This is a direct miss against the central M0 requirement.
+equirement miss: schema/client are SQLite-only (`drizzle-orm/sqlite-cor- Required monorepo restructure was not performed. Workspace remains `packages/*` and `apps/*` (`pnpm-workspace.yaml`), not `packages/agent-os/packages/*` and `packages/agent-os/apps/*`.
+e`, `better-sqlite3`), with no PostgreSQL parity path or migratio- Runtime commit/recovery semantics are incomplete. Worker events/checkpoints are written, but the required four-phase step commit (event -> checkpoint -> agent_state commit -> BullMQ ACK) is not implemented end-to-end; no BullMQ ACK exists; `agent_state` is not committed per step boundary in runtime flow.
+n setup shown.
+- Dashboard SSE fan-out is in-process Set of responses, - Crash recovery is partial and not startup-wired. `recoverCrashedRuns()` exists, but dashboard startup only updates statuses to `RESUMING` and does not re-enqueue/resume execution through a durable queue.
+not Redis pub/sub.
+- API behavior bug: `POST /api/run` returns a generated `runId- Memory requirement miss: session memory is in-process `Map` (`packages/memory/src/session-memory.ts`), not Redis SET with TTL.
+` that is never used by `AgentRunner.run()` (runner generates its own ID), so clients r- DB requirement miss: schema/client are SQLite-only (`drizzle-orm/sqlite-core`, `better-sqlite3`), with no PostgreSQL parity path or migration setup shown.
+eceive a non-authoritative run ID.
+
+Security:
+- No serious ne- Dashboard SSE fan-out is in-process Set of responses, not Redis pub/sub.
+w exploit-class issue observed in the reviewed changes.
+
+Next actions:
+1) Imple- API behavior bug: `POST /api/run` returns a generated `runId` that is never used by `AgentRunner.run()` (runner generates its own ID), so clients receive a non-authoritative run ID.
+ment real BullMQ+Redis scheduler package with the 5 required queues and migrate 
+runtime job lifecycle/ACK to it.
+2) Complete persistence/recovery contract: enSecurity:
+force four-phase commit including `agent_state`, and wire automatic startup recov- No serious new exploit-class issue observed in the reviewed changes.
+ery to re-enqueue from checkpoints.
+3) Finish infrastructure parity r
+equirements: PostgreSQL+SQLite Drizzle support, Redis-backed session memory and SSE pNext actions:
+ub/sub, and fix `/api/run` to return the actual persisted run ID.1) Implement real BullMQ+Redis scheduler package with the 5 required queues and migrate runtime job lifecycle/ACK to it.
+2) Complete persistence/recovery contract: enforce four-phase commit including `agent_state`, and wire automatic startup recovery to re-enqueue from checkpoints.
+3) Finish infrastructure parity requirements: PostgreSQL+SQLite Drizzle support, Redis-backed session memory and SSE pub/sub, and fix `/api/run` to return the actual persisted run ID.

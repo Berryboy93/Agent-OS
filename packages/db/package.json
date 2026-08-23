@@ -1,0 +1,35 @@
+{
+  "name": "@agent-os/db",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "migrate": "tsx bin/migrate.cli.ts",
+    "migrate:generate": "drizzle-kit generate",
+    "migrate:drop": "drizzle-kit drop",
+    "migrate:push": "drizzle-kit push",
+    "migrate:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "drizzle-orm": "^0.45.2",
+    "nanoid": "^5.1.11",
+    "pg": "^8.21.0",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.0.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
+}

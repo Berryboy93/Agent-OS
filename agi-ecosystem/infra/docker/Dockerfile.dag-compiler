@@ -1,0 +1,23 @@
+# Multi-stage build for DAG Compiler
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN npm install -g pnpm
+COPY package.json pnpm-workspace.yaml tsconfig.json ./
+COPY packages/dag-compiler/package.json packages/dag-compiler/
+COPY packages/shared/package.json packages/shared/
+RUN pnpm install --no-frozen-lockfile
+COPY . .
+RUN pnpm --filter @agi-ecosystem/dag-compiler build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache dumb-init
+ENV NODE_ENV=production
+COPY --from=builder /app/packages/dag-compiler/dist ./dist
+COPY --from=builder /app/packages/dag-compiler/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+USER node
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+CMD ["dumb-init", "node", "dist/index.js"]

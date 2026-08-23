@@ -1,0 +1,290 @@
+/**
+ * @package testing infrastructure
+ * Comprehensive vitest setup for Agent-OS monorepo
+ * 
+ * Files to create:
+ * 1. vitest.config.ts (root) - already exists, update it
+ * 2. vitest.workspace.ts (root) - monorepo configuration
+ * 3. packages/*/vitest.config.ts - per-package overrides
+ * 4. Test utilities and helpers
+ * 5. Example test suites
+ */
+
+// ============================================================================
+// 1. ROOT: vitest.workspace.ts
+// ============================================================================
+/**
+ * Monorepo test configuration
+ * Allows running all tests with: pnpm test
+ */
+
+import { defineWorkspace } from 'vitest/config';
+import { getPackages } from '@manypkg/get-packages';
+
+export default defineWorkspace(
+  getPackages(process.cwd()).packages
+    .filter(pkg => pkg.packageJson.name?.startsWith('@agent-os/') || pkg.dir.startsWith('apps/'))
+    .map(pkg => ({
+      test: {
+        name: pkg.packageJson.name || pkg.dir,
+        root: pkg.dir,
+        include: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+        exclude: ['node_modules', 'dist'],
+        globals: true,
+        environment: 'node',
+        coverage: {
+          provider: 'v8',
+          reporter: ['text', 'json', 'html'],
+          exclude: [
+            'node_modules/',
+            'dist/',
+            '**/__tests__/**',
+            '**/*.test.ts',
+            '**/*.spec.ts',
+          ],
+        },
+      },
+    }))
+);
+
+// ============================================================================
+// 2. packages/*/vitest.config.ts TEMPLATE
+// ============================================================================
+/**
+ * Individual package test config
+ * Place in each package that needs tests
+ */
+
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    include: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+    exclude: ['node_modules', 'dist'],
+    globals: true,
+    environment: 'node',
+    hookTimeout: 10_000,
+    testTimeout: 10_000,
+  },
+});
+
+// ============================================================================
+// 3. TEST UTILITIES
+// ============================================================================
+/**
+ * Create: packages/test-utils/src/index.ts
+ * Shared testing utilities for all packages
+ */
+
+import { randomUUID } from 'crypto';
+
+/**
+ * Create a mock database client for testing
+ */
+export function createMockDb() {
+  const data: Record<string, any[]> = {};
+
+  return {
+    select: () => ({
+      from: (table: string) => {
+        return data[table] || [];
+      },
+    }),
+    insert: (table: string, record: any) => {
+      if (!data[table]) data[table] = [];
+      data[table].push({ id: randomUUID(), ...record });
+      return { id: data[table][data[table].length - 1].id };
+    },
+    update: (table: string, record: any) => {
+      if (!data[table]) return { changes: 0 };
+      const index = data[table].findIndex(r => r.id === record.id);
+      if (index >= 0) {
+        data[table][index] = { ...data[table][index], ...record };
+        return { changes: 1 };
+      }
+      return { changes: 0 };
+    },
+    delete: (table: string, id: string) => {
+      if (!data[table]) return { changes: 0 };
+      const index = data[table].findIndex(r => r.id === id);
+      if (index >= 0) {
+        data[table].splice(index, 1);
+        return { changes: 1 };
+      }
+      return { changes: 0 };
+    },
+    clear: (table?: string) => {
+      if (table) delete data[table];
+      else Object.keys(data).forEach(t => delete data[t]);
+    },
+  };
+}
+
+/**
+ * Create a mock event bus
+ */
+export function createMockEventBus() {
+  const listeners: Record<string, Function[]> = {};
+  const emitted: Array<{ event: string; data: any }> = [];
+
+  return {
+    on: (event: string, fn: Function) => {
+      if (!listeners[event]) listeners[event] = [];
+      listeners[event].push(fn);
+    },
+    emit: (event: string, data: any) => {
+      emitted.push({ event, data });
+      listeners[event]?.forEach(fn => fn(data));
+    },
+    getEmitted: () => emitted,
+    clear: () => {
+      emitted.length = 0;
+      Object.keys(listeners).forEach(k => delete listeners[k]);
+    },
+  };
+}
+
+/**
+ * Wait for a condition with timeout
+ */
+export async function waitFor(
+  condition: () => boolean,
+  timeoutMs: number = 5000,
+  pollMs: number = 100
+): Promise<void> {
+  const startTime = Date.now();
+  while (!condition()) {
+    if (Date.now() - startTime > timeoutMs) {
+      throw new Error(`Timeout waiting for condition after ${timeoutMs}ms`);
+    }
+    await new Promise(resolve => setTimeout(resolve, pollMs));
+  }
+}
+
+/**
+ * Create a test agent context
+ */
+export function createTestAgentContext() {
+  return {
+    agentId: randomUUID(),
+    userId: randomUUID(),
+    sessionId: randomUUID(),
+    executionId: randomUUID(),
+    timestamp: new Date(),
+    metadata: {},
+  };
+}
+
+// ============================================================================
+// 4. EXAMPLE TEST SUITE: packages/core/__tests__/types.test.ts
+// ============================================================================
+
+import { describe, it, expect } from 'vitest';
+
+describe('Core Types', () => {
+  it('should define error types', () => {
+    expect(true).toBe(true); // Replace with actual test
+  });
+
+  it('should define agent types', () => {
+    expect(true).toBe(true);
+  });
+});
+
+// ============================================================================
+// 5. EXAMPLE TEST: packages/runtime/__tests__/agent-runner.test.ts
+// ============================================================================
+
+describe('Agent Runner', () => {
+  it('should initialize agent runner', async () => {
+    // const runner = new AgentRunner(config);
+    // expect(runner).toBeDefined();
+    expect(true).toBe(true);
+  });
+
+  it('should execute agent steps', async () => {
+    // const runner = new AgentRunner(config);
+    // const result = await runner.execute(agent);
+    // expect(result.status).toBe('success');
+    expect(true).toBe(true);
+  });
+
+  it('should handle agent errors gracefully', async () => {
+    // const runner = new AgentRunner(config);
+    // const result = await runner.execute(failingAgent);
+    // expect(result.status).toBe('failed');
+    // expect(result.error).toBeDefined();
+    expect(true).toBe(true);
+  });
+});
+
+// ============================================================================
+// 6. PACKAGE.JSON UPDATES
+// ============================================================================
+
+/**
+ * Update root package.json with test scripts:
+ * 
+ * "scripts": {
+ *   "test": "vitest",
+ *   "test:ui": "vitest --ui",
+ *   "test:coverage": "vitest --coverage",
+ *   "test:run": "vitest run",
+ *   "test:watch": "vitest watch"
+ * },
+ * 
+ * "devDependencies": {
+ *   "@vitest/ui": "^1.0.0",
+ *   "@vitest/coverage-v8": "^1.0.0",
+ *   "vitest": "^1.0.0"
+ * }
+ */
+
+// ============================================================================
+// 7. CI INTEGRATION: .github/workflows/test.yml
+// ============================================================================
+
+const githubWorkflow = `
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: \${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test:run
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+`;
+
+export default githubWorkflow;
