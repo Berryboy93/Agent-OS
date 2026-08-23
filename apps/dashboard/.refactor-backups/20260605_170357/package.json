@@ -1,0 +1,51 @@
+{
+  "name": "@agent-os/dashboard",
+  "version": "3.0.0",
+  "description": "Agent-OS monitoring dashboard",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsx server.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agent-os/adapters": "workspace:*",
+    "@agent-os/core": "workspace:*",
+    "@agent-os/db": "workspace:*",
+    "@agent-os/events": "workspace:*",
+    "@agent-os/runtime": "workspace:*",
+    "@tanstack/react-query": "^5.100.14",
+    "better-sqlite3": "^9.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.45.2",
+    "express": "^4.21.2",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.17.0",
+    "react-router-dom": "^7.15.1",
+    "recharts": "^3.8.1",
+    "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^25.9.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^11.0.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "postcss": "^8.5.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.3.0",
+    "typescript": "*",
+    "vite": "^6.4.2"
+  }
+}

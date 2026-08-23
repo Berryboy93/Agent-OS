@@ -1,0 +1,12 @@
+src/App.tsx:      const r = await fetch(`${API}/deployments/${id}/rollback`, { method: 'POST' });
+src/App.tsx:    await fetch(`${API}/deployments/demo`, { method: 'POST' });
+src/App.tsx:      const r = await fetch(`${API}/approvals/${id}/resolve`, {
+src/App.tsx:    await fetch(`${API}/approvals/demo`, { method: 'POST' });
+src/App.tsx:      const r = await fetch(`${API}/runs?limit=50`);
+src/App.tsx:      const r = await fetch(`${API}/events?limit=100`);
+src/App.tsx:      const r = await fetch(`${API}/pipelines`);
+src/App.tsx:      const r = await fetch(`${API}/deployments`);
+src/App.tsx:      const r = await fetch(`${API}/approvals`);
+src/App.tsx:      const r = await fetch(`${API}/stats`);
+src/App.tsx:      const r = await fetch(`${API}/runs/${runId}/events`);
+src/App.tsx:    await fetch(`${API}/runs/demo`, { method: 'POST' });

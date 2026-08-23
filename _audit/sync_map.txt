@@ -1,0 +1,1967 @@
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/agents/agent.ts =====
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/inngest/client.ts =====
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/inngest/index.ts =====
+79:      async ({ event, step }) => {
+80:        await step.run("forward request to Mastra", async () => {
+145:    async ({ event, step }) => {
+146:      return await step.run("execute-cron-workflow", async () => {
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/storage/index.ts =====
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/tools/exampleTool.ts =====
+33:    timestamp: z.string(),
+42:  execute: async (inputData, context) => {
+64:      timestamp: new Date().toISOString(),
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/workflows/workflow.ts =====
+54:        timestamp: z.string(),
+60:  execute: async ({ inputData, mastra }) => {
+90:        timestamp: new Date().toISOString(),
+112:        timestamp: z.string(),
+124:  execute: async ({ inputData, mastra }) => {
+153:  • Timestamp: ${inputData.processedData.timestamp}
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/mastra/index.ts =====
+39://     handler: async (mastra, triggerInfo, runId) => {
+97:      timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
+144:      async (c, next) => {
+179:        createHandler: async ({ mastra }) => inngestServe({ mastra, inngest }),
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/triggers/cronTriggers.ts =====
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/triggers/exampleConnectorTrigger.ts =====
+62: *   handler: async (mastra, triggerInfo, runId) => {
+97:      handler: async (c) => {
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/triggers/slackTriggers.ts =====
+22: *   handler: async (mastra, triggerInfo) => {
+102:export async function getClient() {
+104:  async function getAccessToken() {
+108:      new Date(connectionSettings.settings.expires_at).getTime() > Date.now()
+188:  const addReaction = async (
+190:    timestamp: string,
+195:      timestamp,
+199:      await slack.reactions.add({ channel, timestamp, name: emoji });
+203:        timestamp,
+210:  const removeAllReactions = async (channel: string, timestamp: string) => {
+212:      timestamp,
+220:      "alarm_clock",
+225:        await slack.reactions.remove({ channel, timestamp, name: emoji });
+234:            timestamp,
+243:  return async function reactToMessage(
+245:    timestamp: string,
+249:    await removeAllReactions(channel, timestamp);
+251:      await addReaction(channel, timestamp, "white_check_mark");
+253:      await addReaction(channel, timestamp, "x");
+255:      await addReaction(channel, timestamp, "alarm_clock");
+279:      handler: async (c) => {
+365:      handler: async (c: Context<Env>) => {
+366:        return streamSSE(c, async (stream) => {
+390:          const updateDiagnosisSteps = async (event: string) =>
+567:              error: "posting message missing timestamp",
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/triggers/telegramTriggers.ts =====
+22: *   handler: async (mastra, triggerInfo) => {
+69:      handler: async (c) => {
+
+===== ./.local/skills/artifacts/artifacts/automation/files/src/global.d.ts =====
+
+===== ./.local/skills/artifacts/artifacts/automation/files/tests/testCronAutomation.ts =====
+34:async function testCronTrigger() {
+
+===== ./.local/skills/artifacts/artifacts/automation/files/tests/testWebhookAutomation.ts =====
+62:async function testWebhookTrigger() {
+
+===== ./.local/skills/artifacts/artifacts/expo/files/app/(tabs)/_layout.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/app/(tabs)/index.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/app/+not-found.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/app/_layout.tsx =====
+19:SplashScreen.preventAutoHideAsync();
+41:      SplashScreen.hideAsync();
+
+===== ./.local/skills/artifacts/artifacts/expo/files/babel.config.js =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/components/ErrorBoundary.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/components/ErrorFallback.tsx =====
+2:import { reloadAppAsync } from "expo";
+28:  const handleRestart = async () => {
+30:      await reloadAppAsync();
+
+===== ./.local/skills/artifacts/artifacts/expo/files/components/KeyboardAwareScrollViewCompat.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/constants/colors.ts =====
+37:    // Muted / subdued elements (dividers, timestamps, placeholders)
+
+===== ./.local/skills/artifacts/artifacts/expo/files/hooks/useColors.ts =====
+13: * When a sibling web artifact's dark tokens are synced into a `dark`
+
+===== ./.local/skills/artifacts/artifacts/expo/files/metro.config.js =====
+
+===== ./.local/skills/artifacts/artifacts/expo/files/scripts/build.js =====
+76:function prepareDirectories(timestamp) {
+85:    path.join(staticBuild, timestamp, "_expo", "static", "js", "ios"),
+86:    path.join(staticBuild, timestamp, "_expo", "static", "js", "android"),
+95:  console.log("Build:", timestamp);
+115:async function checkMetroHealth() {
+130:async function startMetro(expoPublicDomain, expoPublicReplId) {
+194:async function downloadFile(url, outputPath) {
+230:async function downloadBundle(platform, timestamp) {
+242:    timestamp,
+255:async function downloadManifest(platform) {
+285:async function downloadBundlesAndManifests(timestamp) {
+292:    await downloadBundle("ios", timestamp);
+293:    await downloadBundle("android", timestamp);
+307:function extractAssets(timestamp) {
+311:      path.join(staticBuild, timestamp, "_expo", "static", "js", "ios", "bundle.js"),
+315:      path.join(staticBuild, timestamp, "_expo", "static", "js", "android", "bundle.js"),
+361:async function downloadAssets(assets, timestamp) {
+370:  const downloadPromises = assets.map(async (asset) => {
+383:      timestamp,
+427:function updateBundleUrls(timestamp, baseUrl) {
+432:      timestamp,
+454:        return `httpServerLocation:"${baseUrl}${basePath}/${timestamp}/_expo/static/js/${decodedPath}"`;
+466:function updateManifests(manifests, timestamp, baseUrl, assetsByHash) {
+472:    manifest.launchAsset.url = `${baseUrl}${basePath}/${timestamp}/_expo/static/js/${platform}/bundle.js`;
+473:    manifest.launchAsset.key = `bundle-${timestamp}`;
+475:      Number(timestamp.split("-")[0]),
+493:        asset.url = `${baseUrl}${basePath}/${timestamp}/_expo/static/js/${assetInfo.relativePath}/${assetInfo.filename}`;
+508:async function main() {
+516:  const timestamp = `${Date.now()}-${process.pid}`;
+518:  prepareDirectories(timestamp);
+524:  const downloadPromise = downloadBundlesAndManifests(timestamp);
+539:  const assets = extractAssets(timestamp);
+550:  const assetCount = await downloadAssets(assets, timestamp);
+553:    updateBundleUrls(timestamp, baseUrl);
+557:  updateManifests(manifests, timestamp, baseUrl, assetsByHash);
+
+===== ./.local/skills/artifacts/artifacts/expo/files/server/serve.js =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/.generated/mockup-components.ts =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/accordion.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/alert-dialog.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/alert.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/aspect-ratio.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/avatar.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/badge.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/breadcrumb.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/button-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/button.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/calendar.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/card.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/carousel.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/chart.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/checkbox.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/collapsible.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/command.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/context-menu.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/dialog.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/drawer.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/dropdown-menu.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/empty.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/field.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/form.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/hover-card.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/input-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/input-otp.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/input.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/item.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/kbd.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/label.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/menubar.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/navigation-menu.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/pagination.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/popover.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/progress.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/radio-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/resizable.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/scroll-area.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/select.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/separator.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/sheet.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/sidebar.tsx =====
+157:  collapsible = "offcanvas",
+164:  collapsible?: "offcanvas" | "icon" | "none"
+222:          "group-data-[collapsible=offcanvas]:w-0",
+234:            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+235:            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+298:        "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
+299:        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
+300:        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/skeleton.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/slider.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/sonner.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/spinner.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/switch.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/table.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/tabs.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/textarea.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toast.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toaster.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toggle-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toggle.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/tooltip.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/hooks/use-mobile.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/hooks/use-toast.ts =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/lib/utils.ts =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/App.tsx =====
+38:    async function loadComponent(): Promise<void> {
+107:          This server renders individual components for the workspace canvas.
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/src/main.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/mockupPreviewPlugin.ts =====
+61:  async function discoverComponents(): Promise<Array<DiscoveredComponent>> {
+101:  async function refresh(): Promise<boolean> {
+132:  async function onFileAddedOrRemoved(): Promise<void> {
+144:    async buildStart() {
+148:    async configureServer(viteServer) {
+193:    async closeWatcher() {
+
+===== ./.local/skills/artifacts/artifacts/mockup-sandbox/files/vite.config.ts =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/accordion.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/alert-dialog.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/alert.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/aspect-ratio.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/avatar.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/badge.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/breadcrumb.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/button-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/button.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/calendar.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/card.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/carousel.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/chart.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/checkbox.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/collapsible.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/command.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/context-menu.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/dialog.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/drawer.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/dropdown-menu.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/empty.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/field.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/form.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/hover-card.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/input-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/input-otp.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/input.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/item.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/kbd.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/label.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/menubar.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/navigation-menu.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/pagination.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/popover.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/progress.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/radio-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/resizable.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/scroll-area.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/select.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/separator.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/sheet.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/sidebar.tsx =====
+157:  collapsible = "offcanvas",
+164:  collapsible?: "offcanvas" | "icon" | "none"
+222:          "group-data-[collapsible=offcanvas]:w-0",
+234:            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+235:            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+298:        "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
+299:        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
+300:        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/skeleton.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/slider.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/sonner.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/spinner.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/switch.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/table.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/tabs.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/textarea.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/toast.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/toaster.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/toggle-group.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/toggle.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/components/ui/tooltip.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/hooks/use-mobile.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/hooks/use-toast.ts =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/lib/utils.ts =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/pages/not-found.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/App.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/src/main.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/react-vite/files/vite.config.ts =====
+
+===== ./.local/skills/artifacts/artifacts/slides/files/scripts/validate-slides.ts =====
+133:async function main() {
+
+===== ./.local/skills/artifacts/artifacts/slides/files/src/data/slidesManifestSchema.ts =====
+
+===== ./.local/skills/artifacts/artifacts/slides/files/src/App.tsx =====
+58:      "a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas," +
+
+===== ./.local/skills/artifacts/artifacts/slides/files/src/main.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/slides/files/src/slideLoader.ts =====
+
+===== ./.local/skills/artifacts/artifacts/slides/files/vite.config.ts =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/components/video/ReplitLoadingScene.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/components/video/VideoTemplate.tsx =====
+21:      {/* mode="wait" = sequential, "sync" = simultaneous, "popLayout" = new snaps in while old animates out */}
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/components/video/index.ts =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/hooks/use-mobile.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/lib/video/animations.ts =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/lib/video/hooks.ts =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/lib/video/index.ts =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/lib/utils.ts =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/App.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/src/main.tsx =====
+
+===== ./.local/skills/artifacts/artifacts/video-js/files/vite.config.ts =====
+
+===== ./.local/skills/artifacts/bootstrap-legacy.js =====
+
+===== ./.local/skills/artifacts/bootstrap.js =====
+
+===== ./.local/skills/whop/references/whopClient.ts =====
+5:async function initWhopClient(): Promise<Whop> {
+
+===== ./apps/dashboard/server.js =====
+43:      timestamp INTEGER NOT NULL,
+70:    timestamp: new Date().toISOString(),
+115:      `SELECT * FROM agent_events ORDER BY timestamp DESC LIMIT ?`
+134:      `SELECT COUNT(*) as count FROM agent_events WHERE timestamp > ?`
+135:    ).get(Date.now() - 3600000);
+151:    const now = Date.now();
+172:        INSERT INTO agent_events (id, run_id, agent_id, type, data_json, timestamp, sequence_number)
+194:  res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
+
+===== ./apps/dashboard/src/components/layout/Sidebar.tsx =====
+
+===== ./apps/dashboard/src/components/layout/Header.tsx =====
+
+===== ./apps/dashboard/src/components/layout/Shell.tsx =====
+
+===== ./apps/dashboard/src/components/ui/Badge.tsx =====
+
+===== ./apps/dashboard/src/components/ui/Panel.tsx =====
+
+===== ./apps/dashboard/src/components/ui/Stat.tsx =====
+
+===== ./apps/dashboard/src/pages/Overview.tsx =====
+
+===== ./apps/dashboard/src/hooks/useSSE.ts =====
+
+===== ./apps/dashboard/src/lib/theme.ts =====
+
+===== ./apps/dashboard/src/types/runtime.ts =====
+23:  timestamp: number;
+
+===== ./apps/dashboard/src/providers/QueryProvider.tsx =====
+
+===== ./apps/dashboard/src/App.tsx =====
+25:  timestamp: number;
+205:        {event.timestamp ? new Date(event.timestamp).toISOString().slice(11, 23) : '—'}
+223:  const handleRollback = async (id: string) => {
+240:  const createDemo = async () => {
+311:  const resolve = async (id: string, decision: 'APPROVED' | 'REJECTED') => {
+331:  const createDemo = async () => {
+362:            const expired = a.expires_at && a.expires_at < Date.now();
+454:  const fetchRuns = useCallback(async () => {
+461:  const fetchEvents = useCallback(async () => {
+468:  const fetchPipelines = useCallback(async () => {
+475:  const fetchDeployments = useCallback(async () => {
+482:  const fetchApprovals = useCallback(async () => {
+489:  const fetchStats = useCallback(async () => {
+496:  const fetchRunEvents = useCallback(async (runId: string) => {
+503:  const refreshAll = useCallback(async () => {
+543:  const spawnDemo = async () => {
+811:                          {ev.timestamp ? new Date(ev.timestamp).toISOString().slice(11, 23) : ''}
+
+===== ./apps/dashboard/src/main.tsx =====
+
+===== ./apps/dashboard/src/App.original.tsx =====
+25:  timestamp: number;
+205:        {event.timestamp ? new Date(event.timestamp).toISOString().slice(11, 23) : '—'}
+223:  const handleRollback = async (id: string) => {
+240:  const createDemo = async () => {
+311:  const resolve = async (id: string, decision: 'APPROVED' | 'REJECTED') => {
+331:  const createDemo = async () => {
+362:            const expired = a.expires_at && a.expires_at < Date.now();
+454:  const fetchRuns = useCallback(async () => {
+461:  const fetchEvents = useCallback(async () => {
+468:  const fetchPipelines = useCallback(async () => {
+475:  const fetchDeployments = useCallback(async () => {
+482:  const fetchApprovals = useCallback(async () => {
+489:  const fetchStats = useCallback(async () => {
+496:  const fetchRunEvents = useCallback(async (runId: string) => {
+503:  const refreshAll = useCallback(async () => {
+543:  const spawnDemo = async () => {
+811:                          {ev.timestamp ? new Date(ev.timestamp).toISOString().slice(11, 23) : ''}
+
+===== ./apps/dashboard/.migration-backup-20260525-191427/src/App.tsx =====
+25:  timestamp: number;
+205:        {event.timestamp ? new Date(event.timestamp).toISOString().slice(11, 23) : '—'}
+223:  const handleRollback = async (id: string) => {
+240:  const createDemo = async () => {
+311:  const resolve = async (id: string, decision: 'APPROVED' | 'REJECTED') => {
+331:  const createDemo = async () => {
+362:            const expired = a.expires_at && a.expires_at < Date.now();
+454:  const fetchRuns = useCallback(async () => {
+461:  const fetchEvents = useCallback(async () => {
+468:  const fetchPipelines = useCallback(async () => {
+475:  const fetchDeployments = useCallback(async () => {
+482:  const fetchApprovals = useCallback(async () => {
+489:  const fetchStats = useCallback(async () => {
+496:  const fetchRunEvents = useCallback(async (runId: string) => {
+503:  const refreshAll = useCallback(async () => {
+543:  const spawnDemo = async () => {
+811:                          {ev.timestamp ? new Date(ev.timestamp).toISOString().slice(11, 23) : ''}
+
+===== ./apps/dashboard/.migration-backup-20260525-191427/src/main.tsx =====
+
+===== ./apps/dashboard/.migration-backup-20260525-191427/vite.config.ts =====
+
+===== ./apps/dashboard/.migration-backup-20260525-191427/main.tsx =====
+
+===== ./apps/dashboard/tailwind.config.js =====
+
+===== ./apps/dashboard/postcss.config.js =====
+
+===== ./apps/dashboard/server.ts =====
+70:    timestamp: new Date().toISOString(),
+182:    const now = Date.now();
+205:      timestamp: new Date(),
+249:    const now = Date.now();
+262:      timestamp: new Date(),
+265:    res.json({ id: req.params['id']!, status: decision, resolvedAt: new Date(now).toISOString() });
+275:      `SELECT * FROM agent_events ORDER BY timestamp DESC LIMIT ?`
+293:      `SELECT COUNT(*) as count FROM agent_events WHERE timestamp > ?`
+294:    ).get(Date.now() - 3600000) as { count: number };
+321:    const now = Date.now();
+349:        timestamp: new Date(now + i * 100),
+363:    const now = Date.now();
+379:      timestamp: new Date(),
+396:    const now = Date.now();
+422:app.post('/api/run', async (req: Request, res: Response) => {
+460:  res.write(`data: ${JSON.stringify({ type: 'connected', clientId, timestamp: new Date().toISOString() })}\n\n`);
+483:  res.write(`data: ${JSON.stringify({ type: 'connected', clientId, timestamp: new Date().toISOString() })}\n\n`);
+
+===== ./apps/dashboard/vite.config.ts =====
+
+===== ./eslint.config.js =====
+
+===== ./packages/adapters/src/base.js =====
+
+===== ./packages/adapters/src/anthropic.js =====
+21:    async run(messages, config) {
+62:    async *stream(messages, config) {
+
+===== ./packages/adapters/src/openai.js =====
+25:    async run(messages, config) {
+73:    async *stream(messages, config) {
+
+===== ./packages/adapters/src/local.js =====
+32:    async run(messages, config) {
+40:    async *stream(messages, config) {
+
+===== ./packages/adapters/src/index.js =====
+
+===== ./packages/adapters/src/anthropic.ts =====
+39:  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {
+82:  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {
+
+===== ./packages/adapters/src/base.ts =====
+24:  abstract stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk>;
+
+===== ./packages/adapters/src/index.ts =====
+
+===== ./packages/adapters/src/local.ts =====
+52:  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {
+60:  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {
+
+===== ./packages/adapters/src/openai.ts =====
+78:  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {
+131:  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {
+
+===== ./packages/cli/src/commands/approvals.ts =====
+22:  timestamp: number;
+37:export async function approveApproval(
+40:  const startTime = Date.now();
+50:      timestamp: Date.now(),
+63:        timestamp: Date.now(),
+74:        timestamp: Date.now(),
+85:        timestamp: Date.now(),
+99:          timestamp: duplicate.createdAt.getTime(),
+118:        timestamp: Date.now(),
+126:        timestamp: Date.now(),
+140:        timestamp: Date.now(),
+147:    const elapsed = Date.now() - startTime;
+155:      timestamp: Date.now(),
+165:      timestamp: Date.now(),
+184:  timestamp: number;
+192:export async function rejectApproval(
+195:  const startTime = Date.now();
+205:      timestamp: Date.now(),
+215:      timestamp: Date.now(),
+228:        timestamp: Date.now(),
+239:        timestamp: Date.now(),
+249:        timestamp: Date.now(),
+265:        timestamp: Date.now(),
+274:        timestamp: Date.now(),
+287:        timestamp: Date.now(),
+293:    const elapsed = Date.now() - startTime;
+301:      timestamp: Date.now(),
+311:      timestamp: Date.now(),
+
+===== ./packages/cli/src/commands/cli-commands-approve-reject.ts =====
+22:  timestamp: number;
+37:export async function approveApproval(
+40:  const startTime = Date.now();
+50:      timestamp: Date.now(),
+63:        timestamp: Date.now(),
+74:        timestamp: Date.now(),
+85:        timestamp: Date.now(),
+99:          timestamp: duplicate.createdAt.getTime(),
+118:        timestamp: Date.now(),
+126:        timestamp: Date.now(),
+140:        timestamp: Date.now(),
+147:    const elapsed = Date.now() - startTime;
+155:      timestamp: Date.now(),
+165:      timestamp: Date.now(),
+184:  timestamp: number;
+192:export async function rejectApproval(
+195:  const startTime = Date.now();
+205:      timestamp: Date.now(),
+215:      timestamp: Date.now(),
+228:        timestamp: Date.now(),
+239:        timestamp: Date.now(),
+249:        timestamp: Date.now(),
+265:        timestamp: Date.now(),
+274:        timestamp: Date.now(),
+287:        timestamp: Date.now(),
+293:    const elapsed = Date.now() - startTime;
+301:      timestamp: Date.now(),
+311:      timestamp: Date.now(),
+
+===== ./packages/cli/src/api-client.ts =====
+6:async function api<T>(path: string, options?: RequestInit): Promise<T> {
+26:  getRunEvents: (id: string) => api<Array<{ type: string; data: unknown; timestamp: number }>>(`/api/runs/${id}/events`),
+
+===== ./packages/cli/src/index.ts =====
+186:    writeFileSync(file, `import type { AdapterRunConfig, AdapterResult, Message, StreamChunk } from '@agent-os/core';\nimport { BaseAdapter } from '@agent-os/adapters';\n\nexport class ${name.charAt(0).toUpperCase() + name.slice(1)}Adapter extends BaseAdapter {\n  readonly provider = '${name}';\n  readonly model: string;\n\n  constructor() {\n    super();\n    this.model = 'your-model';\n  }\n\n  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {\n    throw new Error('Not implemented');\n  }\n\n  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {\n    throw new Error('Not implemented');\n  }\n}\n`);
+197:  .action(async (agentId: string, options: { input: string; json: boolean }) => {
+218:  .action(async (pipelineId: string, options: { input: string }) => {
+274:  .action(async (options: { json: boolean }) => {
+315:  .action(async (runId: string, options: { json: boolean; tail: boolean; since?: string }) => {
+330:        const ts = event.timestamp ? new Date(event.timestamp).toISOString().slice(11, 23) : '??:??:??.???';
+388:      for (const ev of events as Array<{ type: string; data_json: string | null; timestamp: number | null; sequence_number: number }>) {
+389:        const ts = ev.timestamp ? new Date(ev.timestamp).toISOString().slice(11, 23) : '?';
+406:        `SELECT type, timestamp, data_json FROM agent_events WHERE run_id = ? ORDER BY sequence_number`
+407:      ).all(runId) as Array<{ type: string; timestamp: number; data_json: string }>;
+411:        ts: new Date(e.timestamp).toISOString(),
+482:      if (options.from) { query += ` AND timestamp >= ?`; params.push(new Date(options.from).getTime()); }
+483:      if (options.to) { query += ` AND timestamp <= ?`; params.push(new Date(options.to).getTime()); }
+484:      query += ` ORDER BY timestamp ASC`;
+488:        console.log('id,run_id,agent_id,type,timestamp,sequence_number');
+489:        for (const e of events as Array<{ id: string; run_id: string; agent_id: string; type: string; timestamp: number; sequence_number: number }>) {
+490:          console.log(`${e.id},${e.run_id},${e.agent_id},${e.type},${e.timestamp},${e.sequence_number}`);
+502:  .description('Token and latency breakdown by step for a pipeline')
+546:  .action(async (agentId: string, options: { target: string; dryRun: boolean }) => {
+576:  .action(async (deploymentId: string, options: { dryRun: boolean }) => {
+595:  .action(async (approvalId: string, options: { note?: string }) => {
+609:  .action(async (approvalId: string, options: { note?: string }) => {
+
+===== ./packages/cli/__tests__/integration/approve-workflow.test.ts =====
+10:  beforeEach(async () => {
+15:  afterEach(async () => {
+19:  it('should approve and persist to database', async () => {
+34:  it('should emit event to metrics pipeline', async () => {
+
+===== ./packages/cli/__tests__/e2e/approval-commands.test.ts =====
+
+===== ./packages/cli/__tests__/e2e/approval-commands.test (1).ts =====
+14:  it('should validate approval ID presence', async () => {
+21:  it('should reject duplicate approval (409)', async () => {
+34:  it('should handle idempotency correctly', async () => {
+45:      timestamp: result1.timestamp
+54:    // Should return same timestamp (idempotent)
+55:    expect(result2.timestamp).toBe(result1.timestamp);
+58:  it('should emit approval event', async () => {
+67:  it('should emit signal to R3 DAW', async () => {
+
+===== ./packages/core/src/types.js =====
+
+===== ./packages/core/src/errors.js =====
+
+===== ./packages/core/src/index.js =====
+
+===== ./packages/core/src/errors.ts =====
+
+===== ./packages/core/src/index.ts =====
+
+===== ./packages/core/src/types.ts =====
+117:  timestamp: Date;
+157:  timestamp: string;
+383:  stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk>;
+427:  timestamp: Date;
+
+===== ./packages/core/src/types.d.ts =====
+95:    timestamp: Date;
+105:    timestamp: string;
+300:    stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk>;
+342:    timestamp: Date;
+
+===== ./packages/core/src/errors.d.ts =====
+
+===== ./packages/core/src/index.d.ts =====
+
+===== ./packages/db/src/schema.js =====
+20:    startedAt: integer('started_at', { mode: 'timestamp' }),
+21:    completedAt: integer('completed_at', { mode: 'timestamp' }),
+22:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+31:    timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
+45:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+52:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+59:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+60:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+79:    startedAt: integer('started_at', { mode: 'timestamp' }),
+80:    completedAt: integer('completed_at', { mode: 'timestamp' }),
+81:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+99:    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+100:    resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
+101:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+111:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+112:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+120:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+121:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+135:    deployedAt: integer('deployed_at', { mode: 'timestamp' }),
+136:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+146:    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+147:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+148:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+
+===== ./packages/db/src/client.js =====
+12:    sqlite.pragma('synchronous = NORMAL');
+46:      timestamp INTEGER NOT NULL,
+160:    CREATE INDEX IF NOT EXISTS idx_agent_events_timestamp ON agent_events(timestamp DESC);
+
+===== ./packages/db/src/index.js =====
+
+===== ./packages/db/src/client.ts =====
+15:  sqlite.pragma('synchronous = NORMAL');
+50:      timestamp INTEGER NOT NULL,
+164:    CREATE INDEX IF NOT EXISTS idx_agent_events_timestamp ON agent_events(timestamp DESC);
+
+===== ./packages/db/src/index.ts =====
+
+===== ./packages/db/src/schema.ts =====
+21:  startedAt: integer('started_at', { mode: 'timestamp' }),
+22:  completedAt: integer('completed_at', { mode: 'timestamp' }),
+23:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+33:  timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
+48:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+56:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+64:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+65:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+85:  startedAt: integer('started_at', { mode: 'timestamp' }),
+86:  completedAt: integer('completed_at', { mode: 'timestamp' }),
+87:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+106:  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+107:  resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
+108:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+119:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+120:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+129:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+130:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+145:  deployedAt: integer('deployed_at', { mode: 'timestamp' }),
+146:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+157:  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+158:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+159:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+
+===== ./packages/db/src/schema.d.ts =====
+456:        timestamp: import("drizzle-orm/sqlite-core").SQLiteColumn<{
+457:            name: "timestamp";
+
+===== ./packages/db/src/client.d.ts =====
+
+===== ./packages/db/src/index.d.ts =====
+
+===== ./packages/events/src/redaction.js =====
+
+===== ./packages/events/src/event-store.js =====
+33:           (id, run_id, agent_id, type, data_json, timestamp, sequence_number, redaction_incomplete)
+34:         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(fullEvent.id, fullEvent.runId, fullEvent.agentId, fullEvent.type, JSON.stringify(fullEvent.data), fullEvent.timestamp.getTime(), fullEvent.sequenceNumber, fullEvent.redactionIncomplete ? 1 : 0);
+
+===== ./packages/events/src/index.js =====
+
+===== ./packages/events/src/event-store.ts =====
+55:           (id, run_id, agent_id, type, data_json, timestamp, sequence_number, redaction_incomplete)
+63:        fullEvent.timestamp.getTime(),
+
+===== ./packages/events/src/index.ts =====
+
+===== ./packages/events/src/redaction.ts =====
+
+===== ./packages/events/src/redaction.d.ts =====
+
+===== ./packages/events/src/event-store.d.ts =====
+
+===== ./packages/events/src/index.d.ts =====
+
+===== ./packages/memory/src/execution-memory.js =====
+
+===== ./packages/memory/src/session-memory.js =====
+8:        const expiresAt = Date.now() + (ttlMs ?? this.defaultTtlMs);
+15:        if (Date.now() > entry.expiresAt) {
+28:        const now = Date.now();
+
+===== ./packages/memory/src/index.js =====
+
+===== ./packages/memory/src/execution-memory.ts =====
+
+===== ./packages/memory/src/index.ts =====
+
+===== ./packages/memory/src/session-memory.ts =====
+19:    const expiresAt = Date.now() + (ttlMs ?? this.defaultTtlMs);
+26:    if (Date.now() > entry.expiresAt) {
+42:    const now = Date.now();
+
+===== ./packages/runtime/src/checkpoint-manager.js =====
+
+===== ./packages/runtime/src/scheduler.js =====
+
+===== ./packages/runtime/src/agent-runner.js =====
+29:        this.scheduler.process(this.maxConcurrency, async (job) => {
+40:    async run(input) {
+45:        const now = Date.now();
+70:    async runWorker(jobData) {
+95:                    timestamp: new Date(),
+109:                sql.prepare(`UPDATE agent_runs SET status='FAILED', error_message=?, completed_at=? WHERE id=?`).run(msg.error, Date.now(), jobData.runId);
+148:                sql.prepare(`UPDATE agent_runs SET status='FAILED', error_message=?, completed_at=? WHERE id=?`).run(err.message, Date.now(), jobData.runId);
+158:    async recoverCrashedRuns() {
+182:                timestamp: new Date(),
+
+===== ./packages/runtime/src/event-bus.js =====
+16:    async emit(event) {
+
+===== ./packages/runtime/src/token-tracker.js =====
+
+===== ./packages/runtime/src/index.js =====
+
+===== ./packages/runtime/src/worker-entry.js =====
+26:async function buildAdapter(config) {
+48:async function run() {
+60:            timestamp: new Date(),
+68:            timestamp: new Date(),
+93:                timestamp: new Date(),
+100:                timestamp: new Date(),
+106:                    timestamp: new Date(),
+112:                timestamp: new Date(),
+127:                timestamp: new Date(),
+138:                    timestamp: new Date(),
+148:                    timestamp: new Date(),
+158:                    timestamp: new Date(),
+169:            timestamp: new Date(),
+185:            timestamp: new Date(),
+
+===== ./packages/runtime/src/wire/WireEnforcer.ts =====
+
+===== ./packages/runtime/src/wire/WireTypes.ts =====
+7:  timestamp: number
+
+===== ./packages/runtime/src/wire/WirePolicy.ts =====
+4:  async validateReadBeforeWrite(m: Mutation): Promise<boolean> {
+9:  async validateOwnership(m: Mutation): Promise<boolean> {
+14:  async validateSideEffects(m: Mutation): Promise<boolean> {
+
+===== ./packages/runtime/src/wire/WireMiddleware.ts =====
+7:  async intercept(mutation: Mutation) {
+
+===== ./packages/runtime/src/checkpoint-manager.ts =====
+
+===== ./packages/runtime/src/event-bus.ts =====
+23:  async emit(event: Omit<AgentEvent, 'sequenceNumber'>): Promise<AgentEvent> {
+
+===== ./packages/runtime/src/index.ts =====
+
+===== ./packages/runtime/src/scheduler.ts =====
+
+===== ./packages/runtime/src/token-tracker.ts =====
+
+===== ./packages/runtime/src/worker-entry.ts =====
+43:async function buildAdapter(config: WorkerJobData['adapterConfig']): Promise<AdapterInstance> {
+69:async function run(): Promise<void> {
+83:      timestamp: new Date(),
+90:      timestamp: new Date(),
+117:        timestamp: new Date(),
+127:        timestamp: new Date(),
+134:          timestamp: new Date(),
+141:        timestamp: new Date(),
+158:        timestamp: new Date(),
+171:          timestamp: new Date(),
+184:          timestamp: new Date(),
+194:          timestamp: new Date(),
+207:      timestamp: new Date(),
+225:      timestamp: new Date(),
+
+===== ./packages/runtime/src/agent-runner.ts =====
+69:    this.scheduler.process(this.maxConcurrency, async (job) => {
+82:  async run(input: RunInput): Promise<AgentResult> {
+88:    const now = Date.now();
+117:  private async runWorker(jobData: WorkerJobData): Promise<void> {
+154:          timestamp: new Date(),
+181:        ).run(msg.error, Date.now(), jobData.runId);
+221:        ).run(err.message, Date.now(), jobData.runId);
+232:  async recoverCrashedRuns(): Promise<number> {
+260:        timestamp: new Date(),
+
+===== ./packages/scheduler/src/queue.js =====
+18:            id: `${this.name}:${Date.now()}:${Math.random().toString(36).slice(2)}`,
+26:            ...(opts.delayMs ? { delayUntil: new Date(Date.now() + opts.delayMs) } : {}),
+
+===== ./packages/scheduler/src/index.js =====
+
+===== ./packages/scheduler/src/index.ts =====
+
+===== ./packages/scheduler/src/queue.ts =====
+64:      id: `${this.name}:${Date.now()}:${Math.random().toString(36).slice(2)}`,
+72:      ...(opts.delayMs ? { delayUntil: new Date(Date.now() + opts.delayMs) } : {}),
+
+===== ./packages/sdk/src/context.js =====
+
+===== ./packages/sdk/src/define-agent.js =====
+
+===== ./packages/sdk/src/define-pipeline.js =====
+
+===== ./packages/sdk/src/define-tool.js =====
+
+===== ./packages/sdk/src/index.js =====
+
+===== ./packages/sdk/src/context.ts =====
+
+===== ./packages/sdk/src/define-agent.ts =====
+
+===== ./packages/sdk/src/define-pipeline.ts =====
+
+===== ./packages/sdk/src/define-tool.ts =====
+
+===== ./packages/sdk/src/index.ts =====
+
+===== ./packages/telemetry/src/tracer.js =====
+16:            startTime: Date.now(),
+32:        span.endTime = Date.now();
+44:        span.events.push({ name, timestamp: Date.now(), attributes });
+
+===== ./packages/telemetry/src/metrics.js =====
+
+===== ./packages/telemetry/src/index.js =====
+
+===== ./packages/telemetry/src/index.ts =====
+
+===== ./packages/telemetry/src/metrics.ts =====
+5:  timestamp: number;
+
+===== ./packages/telemetry/src/tracer.ts =====
+12:  events: Array<{ name: string; timestamp: number; attributes?: Record<string, string | number | boolean> }>;
+39:      startTime: Date.now(),
+55:    span.endTime = Date.now();
+67:    span.events.push({ name, timestamp: Date.now(), attributes });
+
+===== ./scripts/asi-wire-safe-fs.ts =====
+
+===== ./scripts/asi-wire-v3.ts =====
+124:      timestamp: new Date().toISOString(),
+
+===== ./runtime/boot.ts =====
+
+===== ./src/lib/theme.ts =====
+
+===== ./src/types/runtime.ts =====
+23:  timestamp: number;
+
+===== ./mnt/user-data/outputs/agent-os-integration/agi-suite/runner/handlers/index.ts =====
+
+===== ./mnt/user-data/outputs/agent-os-integration/shared-types/src/index.ts =====
+16:// To keep this in sync: whenever you add/modify a router in R3v4,
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/agents/agent.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/inngest/client.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/inngest/index.ts =====
+79:      async ({ event, step }) => {
+80:        await step.run("forward request to Mastra", async () => {
+145:    async ({ event, step }) => {
+146:      return await step.run("execute-cron-workflow", async () => {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/storage/index.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/tools/exampleTool.ts =====
+33:    timestamp: z.string(),
+42:  execute: async (inputData, context) => {
+64:      timestamp: new Date().toISOString(),
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/workflows/workflow.ts =====
+54:        timestamp: z.string(),
+60:  execute: async ({ inputData, mastra }) => {
+90:        timestamp: new Date().toISOString(),
+112:        timestamp: z.string(),
+124:  execute: async ({ inputData, mastra }) => {
+153:  • Timestamp: ${inputData.processedData.timestamp}
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/mastra/index.ts =====
+39://     handler: async (mastra, triggerInfo, runId) => {
+97:      timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
+144:      async (c, next) => {
+179:        createHandler: async ({ mastra }) => inngestServe({ mastra, inngest }),
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/triggers/cronTriggers.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/triggers/exampleConnectorTrigger.ts =====
+62: *   handler: async (mastra, triggerInfo, runId) => {
+97:      handler: async (c) => {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/triggers/slackTriggers.ts =====
+22: *   handler: async (mastra, triggerInfo) => {
+102:export async function getClient() {
+104:  async function getAccessToken() {
+108:      new Date(connectionSettings.settings.expires_at).getTime() > Date.now()
+188:  const addReaction = async (
+190:    timestamp: string,
+195:      timestamp,
+199:      await slack.reactions.add({ channel, timestamp, name: emoji });
+203:        timestamp,
+210:  const removeAllReactions = async (channel: string, timestamp: string) => {
+212:      timestamp,
+220:      "alarm_clock",
+225:        await slack.reactions.remove({ channel, timestamp, name: emoji });
+234:            timestamp,
+243:  return async function reactToMessage(
+245:    timestamp: string,
+249:    await removeAllReactions(channel, timestamp);
+251:      await addReaction(channel, timestamp, "white_check_mark");
+253:      await addReaction(channel, timestamp, "x");
+255:      await addReaction(channel, timestamp, "alarm_clock");
+279:      handler: async (c) => {
+365:      handler: async (c: Context<Env>) => {
+366:        return streamSSE(c, async (stream) => {
+390:          const updateDiagnosisSteps = async (event: string) =>
+567:              error: "posting message missing timestamp",
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/triggers/telegramTriggers.ts =====
+22: *   handler: async (mastra, triggerInfo) => {
+69:      handler: async (c) => {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/src/global.d.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/tests/testCronAutomation.ts =====
+34:async function testCronTrigger() {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/automation/files/tests/testWebhookAutomation.ts =====
+62:async function testWebhookTrigger() {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/app/(tabs)/_layout.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/app/(tabs)/index.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/app/+not-found.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/app/_layout.tsx =====
+19:SplashScreen.preventAutoHideAsync();
+41:      SplashScreen.hideAsync();
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/babel.config.js =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/components/ErrorBoundary.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/components/ErrorFallback.tsx =====
+2:import { reloadAppAsync } from "expo";
+28:  const handleRestart = async () => {
+30:      await reloadAppAsync();
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/components/KeyboardAwareScrollViewCompat.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/constants/colors.ts =====
+37:    // Muted / subdued elements (dividers, timestamps, placeholders)
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/hooks/useColors.ts =====
+13: * When a sibling web artifact's dark tokens are synced into a `dark`
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/metro.config.js =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/scripts/build.js =====
+76:function prepareDirectories(timestamp) {
+85:    path.join(staticBuild, timestamp, "_expo", "static", "js", "ios"),
+86:    path.join(staticBuild, timestamp, "_expo", "static", "js", "android"),
+95:  console.log("Build:", timestamp);
+115:async function checkMetroHealth() {
+130:async function startMetro(expoPublicDomain, expoPublicReplId) {
+194:async function downloadFile(url, outputPath) {
+230:async function downloadBundle(platform, timestamp) {
+242:    timestamp,
+255:async function downloadManifest(platform) {
+285:async function downloadBundlesAndManifests(timestamp) {
+292:    await downloadBundle("ios", timestamp);
+293:    await downloadBundle("android", timestamp);
+307:function extractAssets(timestamp) {
+311:      path.join(staticBuild, timestamp, "_expo", "static", "js", "ios", "bundle.js"),
+315:      path.join(staticBuild, timestamp, "_expo", "static", "js", "android", "bundle.js"),
+361:async function downloadAssets(assets, timestamp) {
+370:  const downloadPromises = assets.map(async (asset) => {
+383:      timestamp,
+427:function updateBundleUrls(timestamp, baseUrl) {
+432:      timestamp,
+454:        return `httpServerLocation:"${baseUrl}${basePath}/${timestamp}/_expo/static/js/${decodedPath}"`;
+466:function updateManifests(manifests, timestamp, baseUrl, assetsByHash) {
+472:    manifest.launchAsset.url = `${baseUrl}${basePath}/${timestamp}/_expo/static/js/${platform}/bundle.js`;
+473:    manifest.launchAsset.key = `bundle-${timestamp}`;
+475:      Number(timestamp.split("-")[0]),
+493:        asset.url = `${baseUrl}${basePath}/${timestamp}/_expo/static/js/${assetInfo.relativePath}/${assetInfo.filename}`;
+508:async function main() {
+516:  const timestamp = `${Date.now()}-${process.pid}`;
+518:  prepareDirectories(timestamp);
+524:  const downloadPromise = downloadBundlesAndManifests(timestamp);
+539:  const assets = extractAssets(timestamp);
+550:  const assetCount = await downloadAssets(assets, timestamp);
+553:    updateBundleUrls(timestamp, baseUrl);
+557:  updateManifests(manifests, timestamp, baseUrl, assetsByHash);
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/expo/files/server/serve.js =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/.generated/mockup-components.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/accordion.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/alert-dialog.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/alert.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/aspect-ratio.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/avatar.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/badge.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/breadcrumb.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/button-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/button.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/calendar.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/card.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/carousel.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/chart.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/checkbox.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/collapsible.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/command.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/context-menu.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/dialog.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/drawer.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/dropdown-menu.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/empty.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/field.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/form.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/hover-card.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/input-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/input-otp.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/input.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/item.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/kbd.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/label.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/menubar.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/navigation-menu.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/pagination.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/popover.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/progress.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/radio-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/resizable.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/scroll-area.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/select.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/separator.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/sheet.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/sidebar.tsx =====
+157:  collapsible = "offcanvas",
+164:  collapsible?: "offcanvas" | "icon" | "none"
+222:          "group-data-[collapsible=offcanvas]:w-0",
+234:            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+235:            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+298:        "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
+299:        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
+300:        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/skeleton.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/slider.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/sonner.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/spinner.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/switch.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/table.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/tabs.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/textarea.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toast.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toaster.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toggle-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/toggle.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/components/ui/tooltip.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/hooks/use-mobile.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/hooks/use-toast.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/lib/utils.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/App.tsx =====
+38:    async function loadComponent(): Promise<void> {
+107:          This server renders individual components for the workspace canvas.
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/src/main.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/mockupPreviewPlugin.ts =====
+61:  async function discoverComponents(): Promise<Array<DiscoveredComponent>> {
+101:  async function refresh(): Promise<boolean> {
+132:  async function onFileAddedOrRemoved(): Promise<void> {
+144:    async buildStart() {
+148:    async configureServer(viteServer) {
+193:    async closeWatcher() {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/mockup-sandbox/files/vite.config.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/accordion.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/alert-dialog.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/alert.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/aspect-ratio.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/avatar.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/badge.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/breadcrumb.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/button-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/button.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/calendar.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/card.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/carousel.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/chart.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/checkbox.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/collapsible.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/command.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/context-menu.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/dialog.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/drawer.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/dropdown-menu.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/empty.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/field.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/form.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/hover-card.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/input-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/input-otp.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/input.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/item.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/kbd.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/label.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/menubar.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/navigation-menu.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/pagination.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/popover.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/progress.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/radio-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/resizable.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/scroll-area.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/select.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/separator.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/sheet.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/sidebar.tsx =====
+157:  collapsible = "offcanvas",
+164:  collapsible?: "offcanvas" | "icon" | "none"
+222:          "group-data-[collapsible=offcanvas]:w-0",
+234:            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+235:            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+298:        "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
+299:        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
+300:        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/skeleton.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/slider.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/sonner.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/spinner.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/switch.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/table.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/tabs.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/textarea.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/toast.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/toaster.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/toggle-group.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/toggle.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/components/ui/tooltip.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/hooks/use-mobile.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/hooks/use-toast.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/lib/utils.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/pages/not-found.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/App.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/src/main.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/react-vite/files/vite.config.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/slides/files/scripts/validate-slides.ts =====
+133:async function main() {
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/slides/files/src/data/slidesManifestSchema.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/slides/files/src/App.tsx =====
+58:      "a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas," +
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/slides/files/src/main.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/slides/files/src/slideLoader.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/slides/files/vite.config.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/components/video/ReplitLoadingScene.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/components/video/VideoTemplate.tsx =====
+21:      {/* mode="wait" = sequential, "sync" = simultaneous, "popLayout" = new snaps in while old animates out */}
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/components/video/index.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/hooks/use-mobile.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/lib/video/animations.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/lib/video/hooks.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/lib/video/index.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/lib/utils.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/App.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/src/main.tsx =====
+
+===== ./audit/backup_1779758365/skills/artifacts/artifacts/video-js/files/vite.config.ts =====
+
+===== ./audit/backup_1779758365/skills/artifacts/bootstrap-legacy.js =====
+
+===== ./audit/backup_1779758365/skills/artifacts/bootstrap.js =====
+
+===== ./audit/backup_1779758365/skills/whop/references/whopClient.ts =====
+5:async function initWhopClient(): Promise<Whop> {
+
+===== ./audit/backup_1779758365/packages/adapters/src/base.js =====
+
+===== ./audit/backup_1779758365/packages/adapters/src/anthropic.js =====
+21:    async run(messages, config) {
+62:    async *stream(messages, config) {
+
+===== ./audit/backup_1779758365/packages/adapters/src/openai.js =====
+25:    async run(messages, config) {
+73:    async *stream(messages, config) {
+
+===== ./audit/backup_1779758365/packages/adapters/src/local.js =====
+32:    async run(messages, config) {
+40:    async *stream(messages, config) {
+
+===== ./audit/backup_1779758365/packages/adapters/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/adapters/src/anthropic.ts =====
+39:  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {
+82:  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {
+
+===== ./audit/backup_1779758365/packages/adapters/src/base.ts =====
+24:  abstract stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk>;
+
+===== ./audit/backup_1779758365/packages/adapters/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/adapters/src/local.ts =====
+52:  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {
+60:  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {
+
+===== ./audit/backup_1779758365/packages/adapters/src/openai.ts =====
+78:  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {
+131:  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {
+
+===== ./audit/backup_1779758365/packages/cli/src/commands/approvals.ts =====
+22:  timestamp: number;
+37:export async function approveApproval(
+40:  const startTime = Date.now();
+50:      timestamp: Date.now(),
+63:        timestamp: Date.now(),
+74:        timestamp: Date.now(),
+85:        timestamp: Date.now(),
+99:          timestamp: duplicate.createdAt.getTime(),
+118:        timestamp: Date.now(),
+126:        timestamp: Date.now(),
+140:        timestamp: Date.now(),
+147:    const elapsed = Date.now() - startTime;
+155:      timestamp: Date.now(),
+165:      timestamp: Date.now(),
+184:  timestamp: number;
+192:export async function rejectApproval(
+195:  const startTime = Date.now();
+205:      timestamp: Date.now(),
+215:      timestamp: Date.now(),
+228:        timestamp: Date.now(),
+239:        timestamp: Date.now(),
+249:        timestamp: Date.now(),
+265:        timestamp: Date.now(),
+274:        timestamp: Date.now(),
+287:        timestamp: Date.now(),
+293:    const elapsed = Date.now() - startTime;
+301:      timestamp: Date.now(),
+311:      timestamp: Date.now(),
+
+===== ./audit/backup_1779758365/packages/cli/src/commands/cli-commands-approve-reject.ts =====
+22:  timestamp: number;
+37:export async function approveApproval(
+40:  const startTime = Date.now();
+50:      timestamp: Date.now(),
+63:        timestamp: Date.now(),
+74:        timestamp: Date.now(),
+85:        timestamp: Date.now(),
+99:          timestamp: duplicate.createdAt.getTime(),
+118:        timestamp: Date.now(),
+126:        timestamp: Date.now(),
+140:        timestamp: Date.now(),
+147:    const elapsed = Date.now() - startTime;
+155:      timestamp: Date.now(),
+165:      timestamp: Date.now(),
+184:  timestamp: number;
+192:export async function rejectApproval(
+195:  const startTime = Date.now();
+205:      timestamp: Date.now(),
+215:      timestamp: Date.now(),
+228:        timestamp: Date.now(),
+239:        timestamp: Date.now(),
+249:        timestamp: Date.now(),
+265:        timestamp: Date.now(),
+274:        timestamp: Date.now(),
+287:        timestamp: Date.now(),
+293:    const elapsed = Date.now() - startTime;
+301:      timestamp: Date.now(),
+311:      timestamp: Date.now(),
+
+===== ./audit/backup_1779758365/packages/cli/src/api-client.ts =====
+6:async function api<T>(path: string, options?: RequestInit): Promise<T> {
+26:  getRunEvents: (id: string) => api<Array<{ type: string; data: unknown; timestamp: number }>>(`/api/runs/${id}/events`),
+
+===== ./audit/backup_1779758365/packages/cli/src/index.ts =====
+186:    writeFileSync(file, `import type { AdapterRunConfig, AdapterResult, Message, StreamChunk } from '@agent-os/core';\nimport { BaseAdapter } from '@agent-os/adapters';\n\nexport class ${name.charAt(0).toUpperCase() + name.slice(1)}Adapter extends BaseAdapter {\n  readonly provider = '${name}';\n  readonly model: string;\n\n  constructor() {\n    super();\n    this.model = 'your-model';\n  }\n\n  async run(messages: Message[], config: AdapterRunConfig): Promise<AdapterResult> {\n    throw new Error('Not implemented');\n  }\n\n  async *stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk> {\n    throw new Error('Not implemented');\n  }\n}\n`);
+197:  .action(async (agentId: string, options: { input: string; json: boolean }) => {
+218:  .action(async (pipelineId: string, options: { input: string }) => {
+274:  .action(async (options: { json: boolean }) => {
+315:  .action(async (runId: string, options: { json: boolean; tail: boolean; since?: string }) => {
+330:        const ts = event.timestamp ? new Date(event.timestamp).toISOString().slice(11, 23) : '??:??:??.???';
+388:      for (const ev of events as Array<{ type: string; data_json: string | null; timestamp: number | null; sequence_number: number }>) {
+389:        const ts = ev.timestamp ? new Date(ev.timestamp).toISOString().slice(11, 23) : '?';
+406:        `SELECT type, timestamp, data_json FROM agent_events WHERE run_id = ? ORDER BY sequence_number`
+407:      ).all(runId) as Array<{ type: string; timestamp: number; data_json: string }>;
+411:        ts: new Date(e.timestamp).toISOString(),
+482:      if (options.from) { query += ` AND timestamp >= ?`; params.push(new Date(options.from).getTime()); }
+483:      if (options.to) { query += ` AND timestamp <= ?`; params.push(new Date(options.to).getTime()); }
+484:      query += ` ORDER BY timestamp ASC`;
+488:        console.log('id,run_id,agent_id,type,timestamp,sequence_number');
+489:        for (const e of events as Array<{ id: string; run_id: string; agent_id: string; type: string; timestamp: number; sequence_number: number }>) {
+490:          console.log(`${e.id},${e.run_id},${e.agent_id},${e.type},${e.timestamp},${e.sequence_number}`);
+502:  .description('Token and latency breakdown by step for a pipeline')
+546:  .action(async (agentId: string, options: { target: string; dryRun: boolean }) => {
+576:  .action(async (deploymentId: string, options: { dryRun: boolean }) => {
+595:  .action(async (approvalId: string, options: { note?: string }) => {
+609:  .action(async (approvalId: string, options: { note?: string }) => {
+
+===== ./audit/backup_1779758365/packages/cli/__tests__/integration/approve-workflow.test.ts =====
+10:  beforeEach(async () => {
+15:  afterEach(async () => {
+19:  it('should approve and persist to database', async () => {
+34:  it('should emit event to metrics pipeline', async () => {
+
+===== ./audit/backup_1779758365/packages/cli/__tests__/e2e/approval-commands.test (1).ts =====
+14:  it('should validate approval ID presence', async () => {
+21:  it('should reject duplicate approval (409)', async () => {
+34:  it('should handle idempotency correctly', async () => {
+45:      timestamp: result1.timestamp
+54:    // Should return same timestamp (idempotent)
+55:    expect(result2.timestamp).toBe(result1.timestamp);
+58:  it('should emit approval event', async () => {
+67:  it('should emit signal to R3 DAW', async () => {
+
+===== ./audit/backup_1779758365/packages/cli/__tests__/e2e/approval-commands.test.ts =====
+
+===== ./audit/backup_1779758365/packages/core/src/types.js =====
+
+===== ./audit/backup_1779758365/packages/core/src/errors.js =====
+
+===== ./audit/backup_1779758365/packages/core/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/core/src/errors.ts =====
+
+===== ./audit/backup_1779758365/packages/core/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/core/src/types.ts =====
+117:  timestamp: Date;
+157:  timestamp: string;
+383:  stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk>;
+427:  timestamp: Date;
+
+===== ./audit/backup_1779758365/packages/core/src/types.d.ts =====
+95:    timestamp: Date;
+105:    timestamp: string;
+300:    stream(messages: Message[], config: AdapterRunConfig): AsyncGenerator<StreamChunk>;
+342:    timestamp: Date;
+
+===== ./audit/backup_1779758365/packages/core/src/errors.d.ts =====
+
+===== ./audit/backup_1779758365/packages/core/src/index.d.ts =====
+
+===== ./audit/backup_1779758365/packages/db/src/schema.js =====
+20:    startedAt: integer('started_at', { mode: 'timestamp' }),
+21:    completedAt: integer('completed_at', { mode: 'timestamp' }),
+22:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+31:    timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
+45:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+52:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+59:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+60:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+79:    startedAt: integer('started_at', { mode: 'timestamp' }),
+80:    completedAt: integer('completed_at', { mode: 'timestamp' }),
+81:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+99:    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+100:    resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
+101:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+111:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+112:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+120:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+121:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+135:    deployedAt: integer('deployed_at', { mode: 'timestamp' }),
+136:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+146:    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+147:    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+148:    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+
+===== ./audit/backup_1779758365/packages/db/src/client.js =====
+12:    sqlite.pragma('synchronous = NORMAL');
+46:      timestamp INTEGER NOT NULL,
+160:    CREATE INDEX IF NOT EXISTS idx_agent_events_timestamp ON agent_events(timestamp DESC);
+
+===== ./audit/backup_1779758365/packages/db/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/db/src/client.ts =====
+15:  sqlite.pragma('synchronous = NORMAL');
+50:      timestamp INTEGER NOT NULL,
+164:    CREATE INDEX IF NOT EXISTS idx_agent_events_timestamp ON agent_events(timestamp DESC);
+
+===== ./audit/backup_1779758365/packages/db/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/db/src/schema.ts =====
+21:  startedAt: integer('started_at', { mode: 'timestamp' }),
+22:  completedAt: integer('completed_at', { mode: 'timestamp' }),
+23:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+33:  timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
+48:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+56:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+64:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+65:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+85:  startedAt: integer('started_at', { mode: 'timestamp' }),
+86:  completedAt: integer('completed_at', { mode: 'timestamp' }),
+87:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+106:  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+107:  resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
+108:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+119:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+120:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+129:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+130:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+145:  deployedAt: integer('deployed_at', { mode: 'timestamp' }),
+146:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+157:  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+158:  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+159:  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+
+===== ./audit/backup_1779758365/packages/db/src/schema.d.ts =====
+456:        timestamp: import("drizzle-orm/sqlite-core").SQLiteColumn<{
+457:            name: "timestamp";
+
+===== ./audit/backup_1779758365/packages/db/src/client.d.ts =====
+
+===== ./audit/backup_1779758365/packages/db/src/index.d.ts =====
+
+===== ./audit/backup_1779758365/packages/events/src/redaction.js =====
+
+===== ./audit/backup_1779758365/packages/events/src/event-store.js =====
+33:           (id, run_id, agent_id, type, data_json, timestamp, sequence_number, redaction_incomplete)
+34:         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(fullEvent.id, fullEvent.runId, fullEvent.agentId, fullEvent.type, JSON.stringify(fullEvent.data), fullEvent.timestamp.getTime(), fullEvent.sequenceNumber, fullEvent.redactionIncomplete ? 1 : 0);
+
+===== ./audit/backup_1779758365/packages/events/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/events/src/event-store.ts =====
+55:           (id, run_id, agent_id, type, data_json, timestamp, sequence_number, redaction_incomplete)
+63:        fullEvent.timestamp.getTime(),
+
+===== ./audit/backup_1779758365/packages/events/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/events/src/redaction.ts =====
+
+===== ./audit/backup_1779758365/packages/events/src/redaction.d.ts =====
+
+===== ./audit/backup_1779758365/packages/events/src/event-store.d.ts =====
+
+===== ./audit/backup_1779758365/packages/events/src/index.d.ts =====
+
+===== ./audit/backup_1779758365/packages/memory/src/execution-memory.js =====
+
+===== ./audit/backup_1779758365/packages/memory/src/session-memory.js =====
+8:        const expiresAt = Date.now() + (ttlMs ?? this.defaultTtlMs);
+15:        if (Date.now() > entry.expiresAt) {
+28:        const now = Date.now();
+
+===== ./audit/backup_1779758365/packages/memory/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/memory/src/execution-memory.ts =====
+
+===== ./audit/backup_1779758365/packages/memory/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/memory/src/session-memory.ts =====
+19:    const expiresAt = Date.now() + (ttlMs ?? this.defaultTtlMs);
+26:    if (Date.now() > entry.expiresAt) {
+42:    const now = Date.now();
+
+===== ./audit/backup_1779758365/packages/runtime/src/checkpoint-manager.js =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/scheduler.js =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/agent-runner.js =====
+29:        this.scheduler.process(this.maxConcurrency, async (job) => {
+40:    async run(input) {
+45:        const now = Date.now();
+70:    async runWorker(jobData) {
+95:                    timestamp: new Date(),
+109:                sql.prepare(`UPDATE agent_runs SET status='FAILED', error_message=?, completed_at=? WHERE id=?`).run(msg.error, Date.now(), jobData.runId);
+148:                sql.prepare(`UPDATE agent_runs SET status='FAILED', error_message=?, completed_at=? WHERE id=?`).run(err.message, Date.now(), jobData.runId);
+158:    async recoverCrashedRuns() {
+182:                timestamp: new Date(),
+
+===== ./audit/backup_1779758365/packages/runtime/src/event-bus.js =====
+16:    async emit(event) {
+
+===== ./audit/backup_1779758365/packages/runtime/src/token-tracker.js =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/worker-entry.js =====
+26:async function buildAdapter(config) {
+48:async function run() {
+60:            timestamp: new Date(),
+68:            timestamp: new Date(),
+93:                timestamp: new Date(),
+100:                timestamp: new Date(),
+106:                    timestamp: new Date(),
+112:                timestamp: new Date(),
+127:                timestamp: new Date(),
+138:                    timestamp: new Date(),
+148:                    timestamp: new Date(),
+158:                    timestamp: new Date(),
+169:            timestamp: new Date(),
+185:            timestamp: new Date(),
+
+===== ./audit/backup_1779758365/packages/runtime/src/wire/WireEnforcer.ts =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/wire/WireTypes.ts =====
+7:  timestamp: number
+
+===== ./audit/backup_1779758365/packages/runtime/src/wire/WirePolicy.ts =====
+4:  async validateReadBeforeWrite(m: Mutation): Promise<boolean> {
+9:  async validateOwnership(m: Mutation): Promise<boolean> {
+14:  async validateSideEffects(m: Mutation): Promise<boolean> {
+
+===== ./audit/backup_1779758365/packages/runtime/src/wire/WireMiddleware.ts =====
+7:  async intercept(mutation: Mutation) {
+
+===== ./audit/backup_1779758365/packages/runtime/src/checkpoint-manager.ts =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/event-bus.ts =====
+23:  async emit(event: Omit<AgentEvent, 'sequenceNumber'>): Promise<AgentEvent> {
+
+===== ./audit/backup_1779758365/packages/runtime/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/scheduler.ts =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/token-tracker.ts =====
+
+===== ./audit/backup_1779758365/packages/runtime/src/worker-entry.ts =====
+43:async function buildAdapter(config: WorkerJobData['adapterConfig']): Promise<AdapterInstance> {
+69:async function run(): Promise<void> {
+83:      timestamp: new Date(),
+90:      timestamp: new Date(),
+117:        timestamp: new Date(),
+127:        timestamp: new Date(),
+134:          timestamp: new Date(),
+141:        timestamp: new Date(),
+158:        timestamp: new Date(),
+171:          timestamp: new Date(),
+184:          timestamp: new Date(),
+194:          timestamp: new Date(),
+207:      timestamp: new Date(),
+225:      timestamp: new Date(),
+
+===== ./audit/backup_1779758365/packages/runtime/src/agent-runner.ts =====
+69:    this.scheduler.process(this.maxConcurrency, async (job) => {
+82:  async run(input: RunInput): Promise<AgentResult> {
+88:    const now = Date.now();
+117:  private async runWorker(jobData: WorkerJobData): Promise<void> {
+154:          timestamp: new Date(),
+181:        ).run(msg.error, Date.now(), jobData.runId);
+221:        ).run(err.message, Date.now(), jobData.runId);
+232:  async recoverCrashedRuns(): Promise<number> {
+260:        timestamp: new Date(),
+
+===== ./audit/backup_1779758365/packages/scheduler/src/queue.js =====
+18:            id: `${this.name}:${Date.now()}:${Math.random().toString(36).slice(2)}`,
+26:            ...(opts.delayMs ? { delayUntil: new Date(Date.now() + opts.delayMs) } : {}),
+
+===== ./audit/backup_1779758365/packages/scheduler/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/scheduler/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/scheduler/src/queue.ts =====
+64:      id: `${this.name}:${Date.now()}:${Math.random().toString(36).slice(2)}`,
+72:      ...(opts.delayMs ? { delayUntil: new Date(Date.now() + opts.delayMs) } : {}),
+
+===== ./audit/backup_1779758365/packages/sdk/src/context.js =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/define-agent.js =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/define-pipeline.js =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/define-tool.js =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/context.ts =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/define-agent.ts =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/define-pipeline.ts =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/define-tool.ts =====
+
+===== ./audit/backup_1779758365/packages/sdk/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/telemetry/src/tracer.js =====
+16:            startTime: Date.now(),
+32:        span.endTime = Date.now();
+44:        span.events.push({ name, timestamp: Date.now(), attributes });
+
+===== ./audit/backup_1779758365/packages/telemetry/src/metrics.js =====
+
+===== ./audit/backup_1779758365/packages/telemetry/src/index.js =====
+
+===== ./audit/backup_1779758365/packages/telemetry/src/index.ts =====
+
+===== ./audit/backup_1779758365/packages/telemetry/src/metrics.ts =====
+5:  timestamp: number;
+
+===== ./audit/backup_1779758365/packages/telemetry/src/tracer.ts =====
+12:  events: Array<{ name: string; timestamp: number; attributes?: Record<string, string | number | boolean> }>;
+39:      startTime: Date.now(),
+55:    span.endTime = Date.now();
+67:    span.events.push({ name, timestamp: Date.now(), attributes });
+
+===== ./vitest.config.ts =====
+
+===== ./router-type.ts =====
+
+===== ./agent-ws-handler.ts =====
+84:          // Optional ack (enable only for debugging — adds latency)
+
+===== ./diagnostics.ts =====
+49:    .mutation(async ({ input, ctx }) => {
+91:    .query(async ({ input }) => {
+103:        latencyMs:          row?.outputLatencyMs ?? 0,
+112:    .query(async () => {
+141:async function tryAutoApply(
+
+===== ./agentAuth.ts =====
+
+===== ./agents.ts =====
+14:  timestamp,
+70:  createdAt:     timestamp('created_at').defaultNow().notNull(),
+71:  deployedAt:    timestamp('deployed_at'),          // set when claimed by runner
+72:  completedAt:   timestamp('completed_at'),         // set when status → idle
+73:  lastHeartbeat: timestamp('last_heartbeat'),       // updated every 10s by AgentBridge
+98:  createdAt:   timestamp('created_at').defaultNow().notNull(),
+99:  resolvedAt:  timestamp('resolved_at'),
+
+===== ./troubleshoot.ts =====
+28:  async execute(rawConfig: Record<string, unknown>, bridge: AgentBridge): Promise<void> {
+47:            fix:       'Increase audio buffer size to 512 samples in AudioContext config',
+52:        if (metrics.latencyMs > 20) {
+56:            message:  `Audio output latency ${metrics.latencyMs.toFixed(1)}ms — target is <20ms`,
+
+===== ./index.ts =====
+5: *   - pg NOTIFY for low-latency delivery when the worker is up
+16:export async function publishAgentEvent(
+44:  async start(): Promise<void> {
+48:  private async connect(): Promise<void> {
+53:      this.client.on('notification', async (msg) => {
+77:  async stop(): Promise<void> {
+
+===== ./agent-sandbox.ts =====
+23:async function run() {
+
+===== ./agent-bridge.ts =====
+80:  async connectRealtime(): Promise<void> {
+129:    setTimeout(async () => {
+140:    this.heartbeatTimer = setInterval(async () => {
+161:  async flush(): Promise<void> {
+175:  async logDecision(params: Omit<AgentDecisionPayload, 'sessionId' | 'agentSource'>): Promise<void> {
+190:  async recordOutcome(params: {
+203:  async applyMixSuggestion(
+219:  async reportTroubleshooting(
+235:  async configureVocalSpectraNode(
+
+===== ./worker.ts =====
+50:async function claimAgent(agentId: string): Promise<boolean> {
+108:async function deployAgent(agentId: string): Promise<void> {
+164:async function pollOutbox(): Promise<void> {
+167:  const stuckDeployingCutoff = new Date(Date.now() - STUCK_THRESHOLD_MS);
+201:async function main() {
+204:  // 1. pg NOTIFY listener (low-latency path)
+205:  const eventBus = new AgentEventBus(async (agentId) => {
+221:  const shutdown = async (signal: string) => {
+
+===== ./rebuild-useSSE.ts =====
+

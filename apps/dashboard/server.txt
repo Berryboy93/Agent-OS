@@ -1,0 +1,250 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+import { existsSync } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
+import { createDb } from '@agent-os/db';
+import { EventStore } from '@agent-os/events';
+import { AgentRunner } from '@agent-os/runtime';
+import { AnthropicAdapter } from '@agent-os/adapters';
+import { AGENT_OS_VERSION, APPROVAL_TIMEOUT_DEFAULT_MS } from '@agent-os/core';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const DB_PATH = process.env['AGENT_OS_DB'] ?? resolve(__dirname, '../../agent-os.db');
+const PORT = parseInt(process.env['PORT'] ?? '5000', 10);
+const DASHBOARD_SECRET = process.env['DASHBOARD_SECRET'];
+
+const db = createDb(DB_PATH);
+const eventStore = new EventStore(db);
+
+const rawDb = db as unknown as {
+  session: {
+    client: {
+      prepare: (sql: string) => {
+        all: (...args: unknown[]) => unknown[];
+        get: (...args: unknown[]) => unknown;
+        run: (...args: unknown[]) => void;
+      };
+    };
+  };
+};
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const sseClients = new Set<{ res: Response; id: string }>();
+
+function broadcast(payload: unknown): void {
+  const data = `data: ${JSON.stringify(payload)}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.res.write(data);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
+
+eventStore.on('*', (event) => {
+  broadcast({ type: 'agent.event', event });
+});
+
+function requireAuth(req: Request, res: Response): boolean {
+  if (!DASHBOARD_SECRET) return true;
+  const auth = req.headers['authorization'];
+  if (!auth || auth !== `Bearer ${DASHBOARD_SECRET}`) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return false;
+  }
+  return true;
+}
+
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    version: AGENT_OS_VERSION,
+    timestamp: new Date().toISOString(),
+    db: DB_PATH,
+  });
+});
+
+app.get('/api/agents', (_req: Request, res: Response) => {
+  try {
+    const agents = rawDb.session.client.prepare(
+      `SELECT * FROM agent_definitions ORDER BY updated_at DESC`
+    ).all();
+    res.json(agents);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/agents/:id/runs', (req: Request, res: Response) => {
+  try {
+    const limit = parseInt((req.query['limit'] as string) ?? '50', 10);
+    const runs = rawDb.session.client.prepare(
+      `SELECT * FROM agent_runs WHERE agent_id = ? ORDER BY created_at DESC LIMIT ?`
+    ).all(req.params['id']!, limit);
+    res.json(runs);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/runs', (req: Request, res: Response) => {
+  try {
+    const limit = parseInt((req.query['limit'] as string) ?? '50', 10);
+    const runs = rawDb.session.client.prepare(
+      `SELECT * FROM agent_runs ORDER BY created_at DESC LIMIT ?`
+    ).all(limit);
+    res.json(runs);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/runs/:id', (req: Request, res: Response) => {
+  try {
+    const run = rawDb.session.client.prepare(
+      `SELECT * FROM agent_runs WHERE id = ?`
+    ).get(req.params['id']!);
+    if (!run) { res.status(404).json({ error: 'Run not found' }); return; }
+    res.json(run);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/runs/:id/events', (req: Request, res: Response) => {
+  try {
+    const limit = parseInt((req.query['limit'] as string) ?? '500', 10);
+    const cursor = req.query['cursor'] as string | undefined;
+    let query = `SELECT * FROM agent_events WHERE run_id = ?`;
+    const params: unknown[] = [req.params['id']!];
+    if (cursor) { query += ` AND sequence_number > ?`; params.push(parseInt(cursor, 10)); }
+    query += ` ORDER BY sequence_number ASC LIMIT ?`;
+    params.push(limit);
+    const events = rawDb.session.client.prepare(query).all(...params);
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/runs/:id/checkpoints', (req: Request, res: Response) => {
+  try {
+    const checkpoints = rawDb.session.client.prepare(
+      `SELECT id, run_id, agent_id, turn_index, input_tokens, output_tokens, total_tokens, created_at
+       FROM execution_checkpoints WHERE run_id = ? ORDER BY turn_index ASC`
+    ).all(req.params['id']!);
+    res.json(checkpoints);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/pipelines', (_req: Request, res: Response) => {
+  try {
+    const pipelines = rawDb.session.client.prepare(
+      `SELECT * FROM pipeline_runs ORDER BY created_at DESC LIMIT 100`
+    ).all();
+    res.json(pipelines);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/deployments', (_req: Request, res: Response) => {
+  try {
+    const deployments = rawDb.session.client.prepare(
+      `SELECT * FROM deployments ORDER BY created_at DESC LIMIT 100`
+    ).all();
+    res.json(deployments);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.post('/api/deployments/:id/rollback', (req: Request, res: Response) => {
+  if (!requireAuth(req, res)) return;
+  try {
+    const dep = rawDb.session.client.prepare(
+      `SELECT * FROM deployments WHERE id = ?`
+    ).get(req.params['id']!) as Record<string, unknown> | undefined;
+
+    if (!dep) { res.status(404).json({ error: 'Deployment not found' }); return; }
+
+    const rollbackId = uuidv4();
+    const now = Date.now();
+    rawDb.session.client.prepare(`
+      INSERT INTO deployments (id, agent_id, version, status, target, rollback_of, config_json, deployed_by, deployed_at, created_at)
+      VALUES (?, ?, ?, 'ACTIVE', ?, ?, ?, 'dashboard', ?, ?)
+    `).run(
+      rollbackId,
+      dep['agent_id'],
+      dep['version'],
+      dep['target'],
+      dep['id'],
+      dep['config_json'] ?? '{}',
+      now,
+      now
+    );
+
+    rawDb.session.client.prepare(`UPDATE deployments SET status = 'ROLLED_BACK' WHERE id = ?`).run(dep['id'] as string);
+
+    eventStore.appendSync({
+      id: uuidv4(),
+      runId: rollbackId,
+      agentId: dep['agent_id'] as string,
+      type: 'run.started',
+      data: { action: 'rollback', deploymentId: dep['id'], rollbackDeploymentId: rollbackId },
+      timestamp: new Date(),
+    });
+
+    res.json({ rollbackDeploymentId: rollbackId, status: 'ACTIVE', originalId: dep['id'] });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/approvals', (_req: Request, res: Response) => {
+  try {
+    const approvals = rawDb.session.client.prepare(
+      `SELECT * FROM approval_requests ORDER BY created_at DESC LIMIT 100`
+    ).all();
+    res.json(approvals);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.post('/api/approvals/:id/resolve', (req: Request, res: Response) => {
+  if (!requireAuth(req, res)) return;
+  try {
+    const approval = rawDb.session.client.prepare(
+      `SELECT * FROM approval_requests WHERE id = ?`
+    ).get(req.params['id']!) as Record<string, unknown> | undefined;
+
+    if (!approval) { res.status(404).json({ error: 'Approval request not found' }); return; }
+    if (approval['status'] !== 'PENDING') {
+      res.status(409).json({ error: `Approval already ${approval['status'] as string}` });
+      return;
+    }
+
+    const { decision, note, resolvedBy } = req.body as {
+      decision: 'APPROVED' | 'REJECTED';
+      note?: string;
+      resolvedBy?: string;
+    };
+
+    if (!['APPROVED', 'REJECTED'].includes(decision)) {
+      res.status(400).json({ error: 'decision must be APPROVED or REJECTED' });
+      return;
+    }
+
+    const now = Date.now();
+    rawDb.session.client.prepare(`
+      UPDATE approval_requests

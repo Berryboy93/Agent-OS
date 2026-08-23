@@ -1,0 +1,660 @@
+@import "tailwindcss";
+
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
+    *, :before, :after, ::backdrop {
+      --tw-border-style: solid;
+      --tw-outline-style: solid;
+      --tw-blur: initial;
+      --tw-brightness: initial;
+      --tw-contrast: initial;
+      --tw-grayscale: initial;
+      --tw-hue-rotate: initial;
+      --tw-invert: initial;
+      --tw-opacity: initial;
+      --tw-saturate: initial;
+      --tw-sepia: initial;
+      --tw-drop-shadow: initial;
+      --tw-drop-shadow-color: initial;
+      --tw-drop-shadow-alpha: 100%;
+      --tw-drop-shadow-size: initial;
+    }
+  }
+}
+
+/* =============================================================================
+   AGENT-OS DESIGN SYSTEM v3.1
+   AI Infrastructure Dashboard — PRD-Aligned Implementation
+   ============================================================================= */
+
+:root {
+  /* Base Layer — Deep Space */
+  --bg-0: #030712;
+  --bg-1: #040b18;
+  --bg-2: #071326;
+  --bg-3: #0b1020;
+  --bg-4: #12182b;
+
+  /* Ambient Layer — Nebula Colors */
+  --nebula-violet: rgba(139, 92, 246, 0.15);
+  --nebula-cyan: rgba(6, 182, 212, 0.10);
+  --nebula-indigo: rgba(99, 102, 241, 0.12);
+  --nebula-green: rgba(34, 197, 94, 0.08);
+
+  /* Light Layer — Glow System */
+  --glow-purple: rgba(139, 92, 246, 0.4);
+  --glow-green: rgba(34, 197, 94, 0.4);
+  --glow-blue: rgba(59, 130, 246, 0.4);
+  --glow-amber: rgba(245, 158, 11, 0.4);
+  --glow-cyan: rgba(6, 182, 212, 0.4);
+  --glow-red: rgba(239, 68, 68, 0.4);
+  --glow-indigo: rgba(99, 102, 241, 0.4);
+
+  /* Glass Layer — Surface System */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.06);
+  --glass-bg-active: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
+  --glass-border-active: rgba(255, 255, 255, 0.20);
+  --glass-highlight: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --glass-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --glass-shadow-inset: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+
+  /* Identity Colors */
+  --purple: #8b5cf6;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --cyan: #06b6d4;
+  --indigo: #6366f1;
+
+  /* Text Hierarchy */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-muted: #475569;
+
+  /* Blur System */
+  --blur-sm: 12px;
+  --blur-md: 18px;
+  --blur-lg: 24px;
+  --blur-xl: 32px;
+
+  /* Radius System */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* Spacing Grid (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* Legacy aliases for backward compatibility */
+  --bg: var(--bg-3);
+  --bg2: var(--bg-4);
+  --bg3: #1a2238;
+  --border: #27314d;
+  --text: var(--text-primary);
+  --text2: var(--text-secondary);
+  --accent: var(--indigo);
+  --accent2: #818cf8;
+  --radius: var(--radius-md);
+}
+
+/* =============================================================================
+   BASE LAYER — Deep Space Foundation
+   ============================================================================= */
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg-0);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* =============================================================================
+   AMBIENT LAYER — Living Nebula Background
+   ============================================================================= */
+
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient-layer::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, var(--nebula-violet) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, var(--nebula-cyan) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 80%, var(--nebula-indigo) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 70% 60%, var(--nebula-green) 0%, transparent 50%);
+  filter: blur(80px);
+  animation: ambientShift 20s ease-in-out infinite alternate;
+}
+
+.ambient-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, var(--bg-0) 70%);
+  pointer-events: none;
+}
+
+@keyframes ambientShift {
+  0% { opacity: 0.7; transform: scale(1) rotate(0deg); }
+  33% { opacity: 1; transform: scale(1.05) rotate(2deg); }
+  66% { opacity: 0.85; transform: scale(0.98) rotate(-1deg); }
+  100% { opacity: 0.75; transform: scale(1.02) rotate(1deg); }
+}
+
+/* =============================================================================
+   GLASS LAYER — Surface System
+   ============================================================================= */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-shadow-inset);
+  border-radius: var(--radius-md);
+}
+
+.glass-sm {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-sm)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.glass-lg {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--blur-lg)) saturate(200%);
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+}
+
+.glass-xl {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--blur-xl)) saturate(220%);
+  -webkit-backdrop-filter: blur(var(--blur-xl)) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xl);
+}
+
+/* =============================================================================
+   INTERACTION LAYER — Motion System
+   ============================================================================= */
+
+.hover-lift {
+  transition: transform var(--duration-normal) var(--easing-default),
+              box-shadow var(--duration-normal) var(--easing-default),
+              background var(--duration-fast) ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: var(--glass-shadow-lg), var(--glass-shadow-inset);
+}
+
+.hover-glow {
+  transition: all var(--duration-normal) var(--easing-default);
+}
+
+.hover-glow:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-hover);
+}
+
+/* Entry animation */
+@keyframes entryFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.entry-animate {
+  animation: entryFade 0.5s var(--easing-default) forwards;
+}
+
+/* Live insertion animation */
+@keyframes liveInsert {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 200px;
+  }
+}
+
+.live-insert {
+  animation: liveInsert 0.4s var(--easing-default) forwards;
+}
+
+/* Breathing glow */
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 12px currentColor; }
+  50% { opacity: 1; box-shadow: 0 0 24px currentColor, 0 0 48px currentColor; }
+}
+
+.breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Live pulse */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.live-pulse {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* Spin for loading */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =============================================================================
+   TABLE SYSTEM — Execution Ledger
+   ============================================================================= */
+
+.table-glass {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-glass thead th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--space-2);
+  color: var(--text-tertiary);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.table-glass tbody tr {
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.table-glass tbody tr::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+.table-glass tbody tr:hover::before {
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--glow-indigo);
+}
+
+.table-glass tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.table-glass tbody tr.selected {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.table-glass tbody tr.selected::before {
+  background: var(--indigo);
+  box-shadow: 0 0 16px var(--glow-indigo);
+}
+
+.table-glass td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* =============================================================================
+   SIDEBAR SYSTEM — Floating Control Plane
+   ============================================================================= */
+
+.sidebar-glass {
+  width: 280px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%);
+  backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6);
+  gap: var(--space-2);
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--space-3);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--purple) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-item:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg-hover);
+}
+
+.sidebar-item.active {
+  color: var(--text-primary);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, transparent 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.sidebar-item.active::before {
+  opacity: 1;
+}
+
+.sidebar-item.active .sidebar-icon {
+  color: var(--purple);
+  filter: drop-shadow(0 0 8px var(--glow-purple));
+}
+
+/* =============================================================================
+   METRIC CARD SYSTEM — Intelligence Units
+   ============================================================================= */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.metric-card {
+  height: 140px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card .ambient-glow {
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 70%;
+  height: 80%;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.25;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.metric-card:hover .ambient-glow {
+  opacity: 0.4;
+}
+
+.metric-title {
+  font-size: var(--space-2);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.metric-value {
+  font-size: var(--space-8);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.metric-sub {
+  font-size: var(--space-2);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* =============================================================================
+   TIMELINE SYSTEM — Vertical Spine
+   ============================================================================= */
+
+.timeline {
+  position: relative;
+  padding-left: var(--space-8);
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--glass-border) 0%, var(--glass-border-hover) 50%, var(--glass-border) 100%);
+}
+
+.timeline-node {
+  position: relative;
+  padding: var(--space-3) 0;
+  padding-left: var(--space-6);
+}
+
+.timeline-node::before {
+  content: '';
+  position: absolute;
+  left: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 2px solid var(--glass-border);
+  transition: all 0.3s ease;
+}
+
+.timeline-node:hover::before {
+  border-color: currentColor;
+  box-shadow: 0 0 16px currentColor;
+  transform: translateY(-50%) scale(1.2);
+}
+
+.timeline-node.active::before {
+  background: currentColor;
+  border-color: currentColor;
+  box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* =============================================================================
+   SEARCH CAPSULE
+   ============================================================================= */
+
+.search-capsule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  color: var(--text-tertiary);
+  font-size: var(--space-3);
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.search-capsule:focus-within {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-hover);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+.search-capsule input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--space-3);
+  outline: none;
+  width: 100%;
+}
+
+.search-capsule input::placeholder {
+  color: var(--text-muted);
+}
+
+/* =============================================================================
+   NOTIFICATION CLUSTER
+   ============================================================================= */
+
+.notification-bell {
+  position: relative;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-bell:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg-hover);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px var(--glow-red);
+}
+
+/* =============================================================================
+   SCROLLBAR
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* =============================================================================
+   UTILITY CLASSES
+   ============================================================================= */
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-text {
+  text-shadow: 0 0 20px currentColor;
+}
+
+.no-border {
+  border: none !important;
+}
+
+.border-subtle {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}

@@ -1,0 +1,112 @@
+===== TREE =====
+.
+├── agent-os-enterprise-refactor.sh
+├── CHANGELOG-v2.0.0-to-v2.1.0.md
+├── dashboard-audit.txt
+├── dashboard-part-aa
+├── dashboard-part-ab
+├── full-source-audit.txt
+├── index.html
+├── MIGRATION-GUIDE.md
+├── package.json
+├── postcss.config.mjs
+├── public
+│   └── favicon.svg
+├── server.ts
+├── src
+│   ├── App.tsx
+│   ├── components
+│   │   ├── layout
+│   │   │   ├── Header.tsx
+│   │   │   ├── Shell.tsx
+│   │   │   └── Sidebar.tsx
+│   │   └── ui
+│   │       ├── Badge.tsx
+│   │       ├── Panel.tsx
+│   │       └── Stat.tsx
+│   ├── hooks
+│   │   └── useSSE.ts
+│   ├── index.css
+│   ├── lib
+│   │   └── theme.ts
+│   ├── main.tsx
+│   ├── pages
+│   │   └── Overview.tsx
+│   ├── providers
+│   │   └── QueryProvider.tsx
+│   └── types
+│       └── runtime.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── vite.config.ts
+
+11 directories, 29 files
+
+===== PACKAGE.JSON =====
+{
+  "name": "@agent-os/dashboard",
+  "version": "3.0.0",
+  "description": "Agent-OS monitoring dashboard",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsx server.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "...": "link:...",
+    "@agent-os/adapters": "workspace:*",
+    "@agent-os/core": "workspace:*",
+    "@agent-os/db": "workspace:*",
+    "@agent-os/events": "workspace:*",
+    "@agent-os/runtime": "workspace:*",
+    "@tanstack/react-query": "^5.100.14",
+    "better-sqlite3": "^9.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "express": "^4.21.2",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.16.0",
+    "react-router-dom": "^7.15.1",
+    "recharts": "^3.8.1",
+    "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^25.9.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^11.0.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "postcss": "^8.5.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.3.0",
+    "typescript": "*",
+    "vite": "^6.4.2"
+  }
+}
+
+===== TYPESCRIPT FILES =====
+src/App.tsx
+src/components/layout/Header.tsx
+src/components/layout/Shell.tsx
+src/components/layout/Sidebar.tsx
+src/components/ui/Badge.tsx
+src/components/ui/Panel.tsx
+src/components/ui/Stat.tsx
+src/hooks/useSSE.ts
+src/lib/theme.ts
+src/main.tsx
+src/pages/Overview.tsx
+src/providers/QueryProvider.tsx
+src/types/runtime.ts

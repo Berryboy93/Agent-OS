@@ -1,0 +1,3 @@
+src/hooks/useSSE.ts:  const sourceRef = useRef<EventSource | null>(null)
+src/hooks/useSSE.ts:      const source = new EventSource(url)
+src/App.tsx:    const es = new EventSource(`${API}/sse`);

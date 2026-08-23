@@ -1,0 +1,3 @@
+src/providers/QueryProvider.tsx:  const [client] = useState(
+src/App.tsx:  const [loading, setLoading] = useState(true);
+src/App.tsx:  const [liveIndicator, setLiveIndicator] = useState(false);

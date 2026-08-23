@@ -1,0 +1,6 @@
+src/hooks/useSSE.ts:  useEffect(() => {
+src/App.tsx:  useEffect(() => { cb.current = fn; });
+src/App.tsx:  useEffect(() => {
+src/App.tsx:  useEffect(() => {
+src/App.tsx:  useEffect(() => {
+src/App.tsx:  useEffect(() => {

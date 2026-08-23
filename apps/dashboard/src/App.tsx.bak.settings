@@ -1,0 +1,626 @@
+import { ComponentType, useState, useRef, useEffect, useCallback } from 'react'
+import { ToolsPage } from './pages/Tools';
+import { AgentsPage } from './pages/Agents';
+import { DeploymentsPage } from './pages/Deployments';
+import { ApprovalsPage } from './pages/Approvals';
+import { AnalyticsPage } from './pages/Analytics';
+import { AlertsPage } from './pages/Alerts';
+import { PipelinesPage } from './pages/Pipelines';
+import {
+  LayoutDashboard, Play, Users, Wrench, Bell, GitBranch, Rocket, BarChart3, AlertTriangle, Settings,
+  Search, ChevronDown, Copy, ExternalLink, CheckCircle2, X, Check, ArrowRight, Zap, Sparkles
+} from 'lucide-react';
+
+const API = '/api';
+
+interface Run {
+  id: string; agent_id: string; status: string; total_tokens?: number;
+  created_at?: string; started_at?: string; completed_at?: string;
+  agent_version?: string; correlation_id?: string; output_json?: string; error_message?: string;
+}
+interface Event {
+  id: string; type: string; timestamp?: string; data_json?: string;
+}
+interface Pipeline {
+  id: string; pipeline_id: string; pipeline_version?: string; status: string;
+  current_step_index: number; total_tokens?: number; created_at: string;
+}
+interface Deployment {
+  id: string; agent_id: string; version: string; status: string; target: string;
+  deployed_by?: string; created_at: string; rollback_of?: string;
+}
+interface Approval {
+  id: string; execution_id: string; step_id: string; reason: string;
+  status: string; expires_at?: number; resolved_by?: string;
+}
+interface Stats {
+  runs: { total: number; byStatus: Array<{ status: string; count: number }> };
+  tokens: { total: number }; events: { lastHour: number };
+  approvals: { pending: number }; agents: { active: number }; deployments: { active: number };
+}
+interface NavItem {
+  key: string; label: string;
+  icon: ComponentType<any>;
+  badge?: boolean;
+}
+interface Toast {
+  id: number; message: string; type: 'success' | 'error' | 'info';
+}
+
+function useInterval(fn: () => void, ms: number) {
+  const cb = useRef(fn);
+  useEffect(() => { cb.current = fn; });
+  useEffect(() => { const id = setInterval(() => cb.current(), ms); return () => clearInterval(id); }, [ms]);
+}
+
+function useToast() {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const idRef = useRef(0);
+  const show = useCallback((message: string, type: Toast['type'] = 'info') => {
+    const id = ++idRef.current;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+  }, []);
+  const remove = useCallback((id: number) => setToasts(prev => prev.filter(t => t.id !== id)), []);
+  return { toasts, show, remove };
+}
+
+function useClickOutside(ref: React.RefObject<HTMLElement | null>, handler: () => void) {
+  useEffect(() => {
+    const listener = (e: MouseEvent) => {
+      if (!ref.current || ref.current.contains(e.target as Node)) return;
+      handler();
+    };
+    document.addEventListener('mousedown', listener);
+    return () => document.removeEventListener('mousedown', listener);
+  }, [ref, handler]);
+}
+
+const STATUS_CONFIG: Record<string, { color: string; glow: string; bg: string }> = {
+  COMPLETED: { color: '#4ade80', glow: 'var(--glow-green)', bg: 'rgba(74,222,128,0.10)' },
+  FAILED: { color: '#f87171', glow: 'var(--glow-red)', bg: 'rgba(248,113,113,0.10)' },
+  RUNNING: { color: '#fbbf24', glow: 'var(--glow-amber)', bg: 'rgba(251,191,36,0.10)' },
+  PENDING: { color: '#a78bfa', glow: 'var(--glow-purple)', bg: 'rgba(167,139,250,0.10)' },
+  QUEUED: { color: '#c4b5fd', glow: 'var(--glow-purple)', bg: 'rgba(196,181,253,0.10)' },
+  CREATED: { color: '#94a3b8', glow: '', bg: 'rgba(148,163,184,0.10)' },
+  SCHEDULED: { color: '#60a5fa', glow: 'var(--glow-blue)', bg: 'rgba(96,165,250,0.10)' },
+  WAITING_APPROVAL: { color: '#fbbf24', glow: 'var(--glow-amber)', bg: 'rgba(251,191,36,0.10)' },
+  WAITING_DELAY: { color: '#cbd5e1', glow: '', bg: 'rgba(203,213,225,0.10)' },
+  RESUMING: { color: '#22d3ee', glow: 'var(--glow-cyan)', bg: 'rgba(34,211,238,0.10)' },
+  CANCELLED: { color: '#94a3b8', glow: '', bg: 'rgba(148,163,184,0.10)' },
+  ACTIVE: { color: '#4ade80', glow: 'var(--glow-green)', bg: 'rgba(74,222,128,0.10)' },
+  INACTIVE: { color: '#94a3b8', glow: '', bg: 'rgba(148,163,184,0.10)' },
+  ROLLED_BACK: { color: '#94a3b8', glow: '', bg: 'rgba(148,163,184,0.10)' },
+  ROLLING_BACK: { color: '#fbbf24', glow: 'var(--glow-amber)', bg: 'rgba(251,191,36,0.10)' },
+  APPROVED: { color: '#4ade80', glow: 'var(--glow-green)', bg: 'rgba(74,222,128,0.10)' },
+  REJECTED: { color: '#f87171', glow: 'var(--glow-red)', bg: 'rgba(248,113,113,0.10)' },
+  EXPIRED: { color: '#94a3b8', glow: '', bg: 'rgba(148,163,184,0.10)' },
+};
+
+const EVENT_COLOR: Record<string, string> = {
+  'run.started': '#a78bfa', 'run.completed': '#4ade80', 'run.failed': '#f87171',
+  'run.cancelled': '#94a3b8', 'run.resuming': '#22d3ee', 'turn.started': '#60a5fa',
+  'turn.completed': '#22d3ee', 'tool.called': '#fbbf24', 'tool.result': '#4ade80',
+  'tool.error': '#f87171', 'token.usage': '#94a3b8', 'budget.warning': '#fbbf24',
+  'budget.exceeded': '#f87171', 'approval.requested': '#fbbf24',
+  'approval.resolved': '#4ade80', 'approval.expired': '#f87171', 'execution.waiting': '#cbd5e1',
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { key: 'overview', label: 'Overview', icon: LayoutDashboard as any },
+  { key: 'runs', label: 'Runs', icon: Play as any },
+  { key: 'agents', label: 'Agents', icon: Users as any },
+  { key: 'tools', label: 'Tools', icon: Wrench as any },
+  { key: 'approvals', label: 'Approvals', icon: CheckCircle2 as any, badge: true },
+  { key: 'deployments', label: 'Deployments', icon: Rocket as any },
+  { key: 'pipelines', label: 'Pipelines', icon: GitBranch as any },
+  { key: 'analytics', label: 'Analytics', icon: BarChart3 as any },
+  { key: 'alerts', label: 'Alerts', icon: AlertTriangle as any },
+  { key: 'settings', label: 'Settings', icon: Settings as any },
+];
+
+function fmtDate(ts?: string): string {
+  if (!ts) return '—';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch { return ts; }
+}
+function fmtDuration(ms?: number): string {
+  if (!ms || ms <= 0) return '—';
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+}
+function fmtTokens(n?: number): string {
+  if (n == null) return '—';
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return `${n}`;
+}
+function runDuration(r: Run): string {
+  if (r.started_at && r.completed_at) {
+    return fmtDuration(new Date(r.completed_at).getTime() - new Date(r.started_at).getTime());
+  }
+  if (r.started_at) {
+    return fmtDuration(Date.now() - new Date(r.started_at).getTime());
+  }
+  return '—';
+}
+
+function Sparkline({ data, color, width = 80, height = 24 }: { data: number[]; color: string; width?: number; height?: number }) {
+  if (!data.length) return <div style={{ width, height }} />;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1 || 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+  return (
+    <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.6} />
+      <circle cx={width} cy={height - ((data[data.length - 1] - min) / range) * height} r={2} fill={color} />
+    </svg>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.CREATED;
+  return (
+    <span className="status-badge" style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.color}20` }}>
+      <span className="status-badge-dot" style={{ background: cfg.color, boxShadow: `0 0 6px ${cfg.color}` }} />
+      {status}
+    </span>
+  );
+}
+
+function ToastContainer({ toasts, remove }: { toasts: Toast[]; remove: (id: number) => void }) {
+  return (
+    <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {toasts.map(t => (
+        <div key={t.id} className="glass-sm entry-animate" style={{
+          padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8,
+          borderLeft: `3px solid ${t.type === 'success' ? 'var(--green)' : t.type === 'error' ? 'var(--red)' : 'var(--purple)'}`,
+          minWidth: 200
+        }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t.message}</span>
+          <button onClick={() => remove(t.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14 }}>×</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Sidebar({ activeTab, setActiveTab, pendingCount }: { activeTab: string; setActiveTab: (k: string) => void; pendingCount: number }) {
+  return (
+    <nav className="sidebar-glass">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, padding: '0 4px' }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, var(--purple-dark), var(--indigo-dark))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px var(--glow-purple)' }}>
+          <Zap size={16} color="#fff" strokeWidth={2.5} />
+        </div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Agent-OS</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em' }}>v3.0.0</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {NAV_ITEMS.map(item => {
+          const Icon = item.icon;
+          return (
+            <div key={item.key}
+              className={`sidebar-item ${activeTab === item.key ? 'active' : ''}`}
+              onClick={() => setActiveTab(item.key)}
+            >
+              <Icon size={16} strokeWidth={2} className="sidebar-icon" style={{ color: activeTab === item.key ? 'var(--purple)' : 'var(--text-tertiary)' }} />
+              <span>{item.label}</span>
+              {item.badge && pendingCount > 0 && (
+                <span className="sidebar-badge">{pendingCount}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="system-status">
+        <div className="system-status-header">
+          <div className="system-status-dot" />
+          <span className="system-status-text">Healthy</span>
+        </div>
+        <div className="system-status-sub">All systems operational</div>
+      </div>
+      <div className="user-profile">
+        <div className="user-avatar">AD</div>
+        <div className="user-info">
+          <div className="user-name">Admin User</div>
+          <div className="user-email">admin@example.com</div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function TopBar({ showToast }: { showToast: (m: string, t: Toast['type']) => void }) {
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  useClickOutside(notifRef, () => setNotifOpen(false));
+  const [copyText, setCopyText] = useState('Copy');
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText('Agent-OS Dashboard v3.0.0').then(() => {
+      setCopyText('Copied!');
+      showToast('Copied to clipboard', 'success');
+      setTimeout(() => setCopyText('Copy'), 2000);
+    });
+  };
+
+  return (
+    <header style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: '1px solid var(--glass-border)', flexShrink: 0, position: 'relative', zIndex: 50 }}>
+      <div className="topbar-title">
+        <span>Agent os dashboard</span>
+        <span className="topbar-title-badge">JSX</span>
+        <button onClick={handleCopy} className="press-effect focus-ring" style={{
+          display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+          background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
+          borderRadius: 'var(--radius-sm)', color: 'var(--text-tertiary)', fontSize: 11,
+          cursor: 'pointer', fontFamily: 'var(--font-mono)', fontWeight: 500, letterSpacing: '0.02em'
+        }}>
+          <Copy size={12} />
+          {copyText}
+        </button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="search-capsule focus-ring">
+          <Search size={14} color="var(--text-muted)" />
+          <input type="text" placeholder="Search anything..." />
+          <span className="search-kbd">⌘K</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 600, color: 'var(--green)', letterSpacing: '0.02em' }}>
+          <span className="live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
+          Live
+        </div>
+        <div style={{ position: 'relative' }} ref={notifRef}>
+          <div className="notification-bell tooltip" data-tooltip="Notifications" onClick={() => setNotifOpen(!notifOpen)}>
+            <Bell size={18} strokeWidth={1.5} />
+            <span className="notification-badge">3</span>
+          </div>
+          {notifOpen && (
+            <div className="glass-lg entry-animate" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 320, padding: 16, zIndex: 200 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Notifications</span>
+                <button onClick={() => setNotifOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[
+                  { t: 'New deployment failed', d: 'agent-frontend v2.1.3', c: 'var(--red)' },
+                  { t: 'Approval requested', d: 'Run #4821 - step 3', c: 'var(--amber)' },
+                  { t: 'Pipeline completed', d: 'data-sync-pipeline', c: 'var(--green)' },
+                ].map((n, i) => (
+                  <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: n.c, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)' }}>{n.t}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{n.d}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="notification-bell tooltip" data-tooltip="Settings">
+          <Settings size={18} strokeWidth={1.5} />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function MetricCard({ title, value, sub, trend, sparkData, color, delay }: {
+  title: string; value: string; sub: string; trend: string; sparkData: number[]; color: string; delay: number;
+}) {
+  return (
+    <div className="glass metric-card hover-lift entry-animate" style={{ animationDelay: `${delay}s` }}>
+      <div className="ambient-glow" style={{ background: color }} />
+      <div>
+        <div className="metric-title">{title}</div>
+        <div className="metric-value">{value}</div>
+        <div className="metric-sub">
+          {trend.startsWith('+') ? <span className="trend-up">↑ {trend}</span> :
+           trend.startsWith('-') ? <span className="trend-down">↓ {trend}</span> :
+           <span className="trend-neutral">{trend}</span>}
+          <span>{sub}</span>
+        </div>
+      </div>
+      <div style={{ alignSelf: 'flex-end', marginTop: 'auto' }}>
+        <Sparkline data={sparkData} color={color} />
+      </div>
+    </div>
+  );
+}
+
+function OverviewPage({ stats, runs, events, setTab }: {
+  stats: Stats | null; runs: Run[]; events: Event[]; setTab: (k: string) => void;
+}) {
+  const totalRuns = stats?.runs?.total ?? 0;
+  const completed = stats?.runs?.byStatus?.find(s => s.status === 'COMPLETED')?.count ?? 0;
+  const successRate = totalRuns > 0 ? ((completed / totalRuns) * 100).toFixed(1) : '0.0';
+  const tokens = stats?.tokens?.total ?? 0;
+  const agents = stats?.agents?.active ?? 0;
+
+  const sparkData1 = [30, 45, 35, 50, 42, 55, 48, 60, 52, 65, 58, 70, 62, 75, 68, 80, 72, 85, 78, 90];
+  const sparkData2 = [85, 82, 88, 84, 90, 86, 92, 88, 94, 90, 96, 92, 95, 93, 97, 94, 96, 95, 97, 96.4];
+  const sparkData3 = [1.2, 1.4, 1.3, 1.6, 1.5, 1.8, 1.7, 2.0, 1.9, 2.2, 2.1, 2.4, 2.3, 2.6, 2.5, 2.7, 2.6, 2.8, 2.7, 2.74];
+  const sparkData4 = [18, 20, 19, 22, 21, 23, 22, 24, 23, 25, 24, 26, 25, 27, 26, 28, 27, 29, 28, 24];
+
+  return (
+    <div style={{ display: 'flex', gap: 20, height: '100%' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto' }}>
+        <div className="page-header entry-animate">
+          <h1>Overview</h1>
+          <p>Real-time observability across your AI agents and workflows</p>
+        </div>
+        <div className="metric-grid stagger-children">
+          <MetricCard title="Total Runs" value={`${totalRuns.toLocaleString()}`} sub="from +18% last 24h" trend="+18%" sparkData={sparkData1} color="var(--purple)" delay={0.05} />
+          <MetricCard title="Success Rate" value={`${successRate}%`} sub="from +2.1% last 24h" trend="+2.1%" sparkData={sparkData2} color="var(--green)" delay={0.10} />
+          <MetricCard title="Total Tokens" value={fmtTokens(tokens)} sub="from -5% last 24h" trend="-5%" sparkData={sparkData3} color="var(--blue)" delay={0.15} />
+          <MetricCard title="Active Agents" value={`${agents}`} sub="No change" trend="0%" sparkData={sparkData4} color="var(--amber)" delay={0.20} />
+        </div>
+        <div className="glass-lg entry-animate" style={{ animationDelay: '0.25s', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Recent Runs</h3>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span className="filter-pill">All Status <ChevronDown size={12} /></span>
+                <span className="filter-pill">All Agents <ChevronDown size={12} /></span>
+              </div>
+            </div>
+            <button onClick={() => setTab('runs')} className="press-effect focus-ring" style={{
+              display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none',
+              color: 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer', fontWeight: 500
+            }}>
+              View All Runs <ExternalLink size={12} />
+            </button>
+          </div>
+          <div style={{ overflow: 'auto', flex: 1 }}>
+            <table className="table-glass">
+              <thead>
+                <tr>
+                  <th>Run ID</th><th>Agent</th><th>Status</th><th>Tokens</th><th>Duration</th><th>Started</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.slice(0, 5).map((r, i) => (
+                  <tr key={r.id} className="entry-animate" style={{ animationDelay: `${0.3 + i * 0.05}s` }}>
+                    <td><span className="font-mono" style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{r.id}</span></td>
+                    <td><span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{r.agent_id}</span></td>
+                    <td><StatusBadge status={r.status} /></td>
+                    <td><span className="font-mono" style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>{fmtTokens(r.total_tokens)}</span></td>
+                    <td><span className="font-mono" style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>{runDuration(r)}</span></td>
+                    <td><span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{fmtDate(r.started_at || r.created_at)}</span></td>
+                  </tr>
+                ))}
+                {runs.length === 0 && (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No runs found</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Showing 5 of {totalRuns.toLocaleString()} runs</span>
+            <div className="pagination">
+              <span className="pagination-btn active">1</span>
+              <span className="pagination-btn">2</span>
+              <span className="pagination-btn">3</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: 12, padding: '0 4px' }}>...</span>
+              <span className="pagination-btn">{Math.ceil(totalRuns / 5) || 1}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="glass-lg entry-animate-right" style={{ animationDelay: '0.15s', flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Event Stream</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 600, color: 'var(--green)', letterSpacing: '0.02em' }}>
+              <span className="live-pulse" style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
+              Live
+            </div>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {events.slice(0, 6).map((e, i) => (
+              <div key={e.id} className="event-stream-item entry-animate" style={{ animationDelay: `${0.2 + i * 0.05}s` }}>
+                <div className="event-stream-dot" style={{ color: EVENT_COLOR[e.type] || 'var(--text-muted)', background: EVENT_COLOR[e.type] || 'var(--text-muted)' }} />
+                <div className="event-stream-content">
+                  <div className="event-stream-type" style={{ color: EVENT_COLOR[e.type] || 'var(--text-secondary)' }}>{e.type}</div>
+                  <div className="event-stream-time">{fmtDate(e.timestamp)}</div>
+                </div>
+              </div>
+            ))}
+            {events.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)', fontSize: 12 }}>No events</div>
+            )}
+          </div>
+          <button onClick={() => setTab('runs')} className="press-effect focus-ring" style={{
+            marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            padding: '8px 0', background: 'none', border: 'none', color: 'var(--text-tertiary)',
+            fontSize: 12, cursor: 'pointer', fontWeight: 500, borderTop: '1px solid rgba(255,255,255,0.03)'
+          }}>
+            View full event log <ArrowRight size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RunsPage({ runs, stats }: { runs: Run[]; stats: Stats | null }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: '100%' }}>
+      <div className="page-header entry-animate">
+        <h1>Runs</h1>
+        <p>All execution runs across your agent fleet</p>
+      </div>
+      <div className="glass-lg entry-animate" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <span className="filter-pill">All Status <ChevronDown size={12} /></span>
+            <span className="filter-pill">All Agents <ChevronDown size={12} /></span>
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{runs.length} runs</span>
+        </div>
+        <div style={{ overflow: 'auto', flex: 1 }}>
+          <table className="table-glass">
+            <thead>
+              <tr><th>Run ID</th><th>Agent</th><th>Status</th><th>Tokens</th><th>Duration</th><th>Started</th></tr>
+            </thead>
+            <tbody>
+              {runs.map((r, i) => (
+                <tr key={r.id} className="entry-animate" style={{ animationDelay: `${i * 0.03}s` }}>
+                  <td><span className="font-mono" style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{r.id}</span></td>
+                  <td><span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{r.agent_id}</span></td>
+                  <td><StatusBadge status={r.status} /></td>
+                  <td><span className="font-mono" style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>{fmtTokens(r.total_tokens)}</span></td>
+                  <td><span className="font-mono" style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>{runDuration(r)}</span></td>
+                  <td><span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{fmtDate(r.started_at || r.created_at)}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlaceholderPage({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: '100%' }}>
+      <div className="page-header entry-animate">
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+      </div>
+      <div className="glass-lg entry-animate" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
+        <Sparkles size={48} color="var(--text-muted)" strokeWidth={1} />
+        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Coming soon</span>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toasts, show, remove } = useToast();
+  const liveRef = useRef(false);
+
+  const fetchAll = useCallback(() => {
+    Promise.all([
+      fetch(`${API}/runs`).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/events`).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/pipelines`).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/deployments`).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/approvals`).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/stats`).then(r => r.ok ? r.json() : null),
+    ]).then(([r, e, p, d, a, s]) => {
+      setRuns(r.runs || r || []);
+      setEvents(e.events || e || []);
+      setPipelines(p.pipelines || p || []);
+      setDeployments(d.deployments || d || []);
+      setApprovals(a.approvals || a || []);
+      setStats(s);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+      show('Failed to fetch data', 'error');
+    });
+  }, [show]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useInterval(fetchAll, 5000);
+
+  useEffect(() => {
+    const es = new EventSource('/api/sse');
+    es.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        if (data.type?.startsWith('run.')) {
+          setRuns(prev => {
+            const idx = prev.findIndex(r => r.id === data.run_id);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = { ...next[idx], ...data };
+              return next;
+            }
+            return prev;
+          });
+        }
+        liveRef.current = true;
+        setTimeout(() => { liveRef.current = false; }, 2000);
+      } catch { /* ignore */ }
+    };
+    return () => es.close();
+  }, []);
+
+  const spawnDemoRun = () => {
+    fetch(`${API}/demo/run`, { method: 'POST' })
+      .then(() => { show('Demo run created', 'success'); fetchAll(); })
+      .catch(() => show('Failed to create demo run', 'error'));
+  };
+  const spawnDemoDeployment = () => {
+    fetch(`${API}/demo/deployment`, { method: 'POST' })
+      .then(() => { show('Demo deployment created', 'success'); fetchAll(); })
+      .catch(() => show('Failed to create demo deployment', 'error'));
+  };
+  const spawnDemoApproval = () => {
+    fetch(`${API}/demo/approval`, { method: 'POST' })
+      .then(() => { show('Demo approval created', 'success'); fetchAll(); })
+      .catch(() => show('Failed to create demo approval', 'error'));
+  };
+
+  const pendingCount = approvals.filter(a => a.status === 'PENDING').length;
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview': return <OverviewPage stats={stats} runs={runs} events={events} setTab={setActiveTab} />;
+      case 'runs': return <RunsPage runs={runs} stats={stats} />;
+      case 'approvals': return <ApprovalsPage />;
+      case 'deployments': return <DeploymentsPage />;
+      case 'agents': return <AgentsPage />;
+      case 'tools': return <ToolsPage />;
+      case 'pipelines': return <PipelinesPage />;
+      case 'analytics': return <AnalyticsPage />;
+      case 'alerts': return <AlertsPage />;
+      case 'settings': return <PlaceholderPage title="Settings" subtitle="System configuration and preferences" />;
+      default: return <OverviewPage stats={stats} runs={runs} events={events} setTab={setActiveTab} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-0)', flexDirection: 'column', gap: 16 }}>
+        <div className="shimmer" style={{ width: 40, height: 40, borderRadius: '50%' }} />
+        <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading Agent-OS...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', background: 'var(--bg-0)', position: 'relative' }}>
+      <div className="ambient-layer" />
+      <ToastContainer toasts={toasts} remove={remove} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} pendingCount={pendingCount} />
+      <div style={{ marginLeft: 240, flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', zIndex: 1 }}>
+        <TopBar showToast={show} />
+        <main style={{ flex: 1, padding: '24px 28px', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+}
