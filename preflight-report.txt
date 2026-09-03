@@ -1,0 +1,34 @@
+[0;36m
+╔════════════════════════════════════════════════════════════╗
+║  AGENT-OS PRE-FLIGHT VERIFICATION PROTOCOL v1.0            ║
+║  Zero-Assumption Evidence-Based State Verification         ║
+╚════════════════════════════════════════════════════════════╝
+[0m
+
+
+[0;36m═══════════════════════════════════════════════════════════[0m
+[0;36mSECTION 1: REPOSITORY VERIFICATION[0m
+[0;36m═══════════════════════════════════════════════════════════[0m
+
+[0;32m✓[0m Agent-OS directory exists: /home/r3v/Agent-OS
+[0;32m✓[0m Agent-OS directory is readable
+[0;32m✓[0m Git repository detected
+
+[0;36m═══════════════════════════════════════════════════════════[0m
+[0;36mSECTION 2: CRITICAL FILES VERIFICATION[0m
+[0;36m═══════════════════════════════════════════════════════════[0m
+
+[0;32m✓[0m File exists: package.json (442 bytes)
+[0;32m✓[0m File exists: pnpm-workspace.yaml (133 bytes)
+[0;32m✓[0m File exists: tsconfig.json (563 bytes)
+[0;32m✓[0m File exists: vitest.config.ts (493 bytes)
+[0;32m✓[0m File exists: pnpm-lock.yaml (248262 bytes)
+
+[0;36m═══════════════════════════════════════════════════════════[0m
+[0;36mSECTION 3: PACKAGE STRUCTURE VERIFICATION[0m
+[0;36m═══════════════════════════════════════════════════════════[0m
+
+[0;32m✓[0m packages/ directory exists
+
+Actual packages found:
+[0;32m✓[0m   adapters/package.json exists

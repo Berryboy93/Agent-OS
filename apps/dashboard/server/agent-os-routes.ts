@@ -4,7 +4,9 @@ import os from 'os'
 import { mkdirSync, existsSync } from 'fs'
 import Database from 'better-sqlite3'
 
-const router = express.Router()
+import type { Router as ExpressRouter } from 'express';
+
+const router: ExpressRouter = express.Router();
 
 // ── Database Setup ──────────────────────────────────
 const dbPath = process.env.AGENT_OS_DB_PATH

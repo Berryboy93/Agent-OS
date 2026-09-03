@@ -10,10 +10,9 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "baseUrl": ".",
     "paths": {
-      "@agi-suite/*": [
-        "packages/*/src"
-      ],
+      "packages/*/src": ["packages/*/src"],
       "@r3/*": [
         "packages/*/src"
       ],

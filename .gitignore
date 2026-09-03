@@ -1,8 +1,15 @@
 node_modules/
 dist/
-.cache/
-*.js.map
+*.tsbuildinfo
+*.d.ts
 *.d.ts.map
+*.js.map
+*.js
 .env
 .env.*
 *.log
+repos.tar.gz
+tokens.json
+vitest.config.ts.timestamp-*.mjs
+packages/control-plane/db/
+packages/mythos-engine/src/grammar.js

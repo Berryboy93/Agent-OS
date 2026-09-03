@@ -1,2 +1,3 @@
-import toolsRouter from './tools';
+import { router as toolsRouter } from './tools.js';
+
 export { toolsRouter };
