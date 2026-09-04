@@ -5,9 +5,9 @@ import { logger } from '../utils/logger.js';
 const DB_PATH = process.env.AGENT_OS_DB || '/home/r3v/Agent-OS/agent-os.db';
 
 // Lazy connection - only connect when needed
-let db: Database | null = null;
+let db: Database.Database | null = null;
 
-function getDb(): Database {
+function getDb(): Database.Database {
   if (!db) {
     try {
       db = new Database(DB_PATH);

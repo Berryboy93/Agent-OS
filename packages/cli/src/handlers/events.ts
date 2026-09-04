@@ -3,9 +3,9 @@ import Database from 'better-sqlite3';
 import { logger } from '../utils/logger.js';
 
 const DB_PATH = process.env.AGENT_OS_DB || '/home/r3v/Agent-OS/agent-os.db';
-let db: Database | null = null;
+let db: Database.Database | null = null;
 
-function getDb(): Database {
+function getDb(): Database.Database {
   if (!db) {
     db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');

@@ -4,24 +4,11 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src"],
   "references": [
-    {
-      "path": "../dag-compiler"
-    },
-    {
-      "path": "../simulation-engine"
-    },
-    {
-      "path": "../mythos-policy-engine"
-    },
-    {
-      "path": "../swarm-runtime"
-    },
-    {
-      "path": "../event-store"
-    }
+    { "path": "../dag-compiler" },
+    { "path": "../simulation-engine" },
+    { "path": "../mythos-policy-engine" },
+    { "path": "../event-store" }
   ]
 }

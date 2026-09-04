@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+  - '!packages/civilization-orchestrator'
 allowBuilds:
   better-sqlite3: true
   esbuild: true
