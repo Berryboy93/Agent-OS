@@ -11,7 +11,8 @@
     "@agi-ecosystem/agent-os": "workspace:*",
     "@agi-ecosystem/dag-compiler": "workspace:*",
     "@agent-os/core": "workspace:*",
-    "@agent-os/events": "workspace:*"
+    "@agent-os/events": "workspace:*",
+    "@agi-ecosystem/swarm-runtime": "workspace:*"
   },
   "devDependencies": {
     "typescript": "*"

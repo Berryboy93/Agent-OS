@@ -9,6 +9,7 @@
     { "path": "../dag-compiler" },
     { "path": "../simulation-engine" },
     { "path": "../mythos-policy-engine" },
-    { "path": "../event-store" }
+    { "path": "../event-store" },
+    { "path": "../swarm-runtime" }
   ]
 }

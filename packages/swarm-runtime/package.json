@@ -1,0 +1,28 @@
+{
+  "name": "@agi-ecosystem/swarm-runtime",
+  "version": "2.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agi-ecosystem/agent-os-runtime": "workspace:*",
+    "@agi-ecosystem/dag-compiler": "workspace:*",
+    "@agi-ecosystem/event-store": "workspace:*",
+    "bullmq": "^5.7.0",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "*",
+    "vitest": "*"
+  }
+}
