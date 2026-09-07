@@ -1,91 +1,176 @@
-import { DAGNode, ExecutionPlan } from '@agi-ecosystem/dag-compiler';
-import { AgentSandbox, SandboxResult } from '../sandbox/index.js';
-import { CapabilityManager } from '../capabilities/index.js';
+import type { DAGNode, ExecutionPlan } from '@agi-ecosystem/dag-compiler';
+import {
+  AgentSandbox,
+  type SandboxResult,
+} from '../sandbox/index.js';
+import {
+  CapabilityManager,
+  type Capability,
+} from '../capabilities/index.js';
 import { EventEmitter } from '../events/index.js';
+import { MythosEngine } from '@agi-ecosystem/mythos-policy-engine';
 
 export interface ExecutionContext {
   agent_id: string;
   session_id: string;
   plan: ExecutionPlan;
-  variables: Map<string, any>;
+  variables: Map<string, unknown>;
+  nodes: ReadonlyMap<string, DAGNode>;
 }
 
 export interface NodeExecutionResult {
   node_id: string;
   success: boolean;
-  output: any;
+  output: unknown;
   sandbox_result: SandboxResult;
   events_emitted: string[];
 }
 
+interface AuthorizationRequest {
+  resource: string;
+  action: string;
+  scope: string;
+}
+
 export class AgentExecutor {
-  private sandbox: AgentSandbox;
-  private capabilityManager: CapabilityManager;
-  private eventEmitter: EventEmitter;
-  private context: ExecutionContext;
+  private readonly sandbox: AgentSandbox;
+  private readonly capabilityManager: CapabilityManager;
+  private readonly eventEmitter: EventEmitter;
+  private readonly mythos: MythosEngine;
+  private readonly context: ExecutionContext;
 
   constructor(
     context: ExecutionContext,
     capabilityManager: CapabilityManager,
-    eventEmitter: EventEmitter
+    eventEmitter: EventEmitter,
+    mythos: MythosEngine,
   ) {
     this.context = context;
     this.capabilityManager = capabilityManager;
     this.eventEmitter = eventEmitter;
+    this.mythos = mythos;
+
     this.sandbox = new AgentSandbox({
       timeout_ms: 30000,
       memory_limit_mb: 256,
       network_access: false,
-      file_system_access: false
+      file_system_access: false,
     });
   }
 
-  async executeNode(node: DAGNode): Promise<NodeExecutionResult> {
-    // 1. Capability check
-    const capCheck = this.capabilityManager.checkCapabilityWithConstraints(
+  async executeNode(
+    node: DAGNode,
+  ): Promise<NodeExecutionResult> {
+    const profile = this.capabilityManager.getProfile(
       this.context.agent_id,
-      'compute',
-      'execute',
-      { executor: node.executor, payload: node.payload }
     );
-    if (!capCheck.allowed) {
-      throw new Error(`Capability denied: ${capCheck.reason}`);
+
+    if (!profile) {
+      throw new Error(
+        `Execution denied: agent profile not found for ${this.context.agent_id}`
+      );
     }
 
-    // 2. Emit pre-execution event
+    const request = this.getAuthorizationRequest(node);
+    const payloadSize = JSON.stringify(node.payload).length;
+
+    const capabilityCheck =
+      this.capabilityManager.authorize(
+        this.context.agent_id,
+        {
+          ...request,
+          executor: node.executor,
+          context: {
+            executor: node.executor,
+            path:
+              typeof node.payload.path === 'string'
+                ? node.payload.path
+                : undefined,
+            size: payloadSize,
+            node_id: node.id,
+          },
+        },
+      );
+
+    if (!capabilityCheck.allowed) {
+      throw new Error(
+        `Capability denied: ${capabilityCheck.reason}`
+      );
+    }
+
+    const capability = capabilityCheck.capability;
+    if (!capability) {
+      throw new Error(
+        'Capability authorization succeeded without a capability'
+      );
+    }
+
+    const mythosDecision = this.mythos.evaluate(
+      'pre_execution',
+      {
+        agent_id: this.context.agent_id,
+        session_id: this.context.session_id,
+        risk_score: this.context.plan.risk_score,
+        trust_level: profile.trust_level,
+        payload: node.payload,
+        data: {
+          node_id: node.id,
+          node_type: node.type,
+          executor: node.executor,
+          resource: request.resource,
+          action: request.action,
+          scope: request.scope,
+          capability_id: capability.id,
+        },
+      },
+    );
+
+    if (!mythosDecision.allowed) {
+      throw new Error(
+        `Mythos policy denied execution: ${mythosDecision.reasons.join('; ')}`
+      );
+    }
+
     await this.eventEmitter.emit({
       type: 'node_execution_start',
       payload: {
         node_id: node.id,
         agent_id: this.context.agent_id,
         session_id: this.context.session_id,
-        executor: node.executor
-      }
+        executor: node.executor,
+        capability_id: capability.id,
+      },
     });
 
-    // 3. Prepare execution code
     const code = this.generateExecutionCode(node);
     const input = this.prepareInput(node);
 
-    // 4. Execute in sandbox
-    const sandboxResult = await this.sandbox.execute(code, input);
+    const sandboxResult = await this.sandbox.execute(
+      code,
+      input,
+    );
 
-    // 5. Store output in context variables
     if (sandboxResult.success) {
-      this.context.variables.set(node.id, sandboxResult.output);
+      this.context.variables.set(
+        node.id,
+        sandboxResult.output,
+      );
     }
 
-    // 6. Emit post-execution event
     await this.eventEmitter.emit({
-      type: sandboxResult.success ? 'node_execution_success' : 'node_execution_failure',
+      type: sandboxResult.success
+        ? 'node_execution_success'
+        : 'node_execution_failure',
       payload: {
         node_id: node.id,
         agent_id: this.context.agent_id,
         session_id: this.context.session_id,
         duration_ms: sandboxResult.execution_time_ms,
-        output: sandboxResult.success ? sandboxResult.output : null,
-        error: sandboxResult.error
-      }
+        output: sandboxResult.success
+          ? sandboxResult.output
+          : null,
+        error: sandboxResult.error,
+      },
     });
 
     return {
@@ -93,55 +178,105 @@ export class AgentExecutor {
       success: sandboxResult.success,
       output: sandboxResult.output,
       sandbox_result: sandboxResult,
-      events_emitted: [node.id]
+      events_emitted: [node.id],
     };
   }
 
-  private generateExecutionCode(node: DAGNode): string {
-    // In production, this would dispatch to registered executors
-    // For now, generate a simple wrapper
-    return `
-      // Agent OS Runtime — Auto-generated execution wrapper
-      // Executor: ${node.executor}
-      // Node ID: ${node.id}
+  private getAuthorizationRequest(
+    node: DAGNode,
+  ): AuthorizationRequest {
+    switch (node.type) {
+      case 'memory_read':
+        return {
+          resource: 'memory',
+          action: 'read',
+          scope: 'isolated',
+        };
 
-      const result = (function() {
-        ${node.executor === 'math.add' ? 'return input_a + input_b;' : ''}
-        ${node.executor === 'agent.analyze' ? 'return { analysis: "completed", query: input_query };' : ''}
-        ${node.executor === 'store.result' ? 'return { stored: true, key: input_key };' : ''}
-        return { executor: "${node.executor}", status: "executed" };
-      })();
+      case 'memory_write':
+        return {
+          resource: 'memory',
+          action: 'write',
+          scope: 'isolated',
+        };
 
-      result;
-    `;
+      case 'compute':
+      case 'validate':
+      case 'agent_task':
+      default:
+        return {
+          resource: 'compute',
+          action: 'execute',
+          scope: 'sandbox',
+        };
+    }
   }
 
-  private prepareInput(node: DAGNode): Record<string, any> {
-    const input: Record<string, any> = {};
-    for (const [key, value] of Object.entries(node.payload)) {
-      input[`input_${key}`] = value;
+  private generateExecutionCode(
+    node: DAGNode,
+  ): string {
+    switch (node.executor) {
+      case 'math.add':
+        return 'return input_a + input_b;';
+
+      case 'agent.analyze':
+        return `
+          return {
+            analysis: 'completed',
+            query: input_query
+          };
+        `;
+
+      case 'store.result':
+        return `
+          return {
+            stored: true,
+            key: input_key
+          };
+        `;
+
+      default:
+        throw new Error(
+          `Unsupported executor: ${node.executor}`
+        );
     }
+  }
+
+  private prepareInput(
+    node: DAGNode,
+  ): Record<string, unknown> {
+    const input: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(
+      node.payload,
+    )) {
+      input[key] = value;
+    }
+
     return input;
   }
 
-  async executePlan(): Promise<Map<string, NodeExecutionResult>> {
-    const results = new Map<string, NodeExecutionResult>();
+  async executePlan(): Promise<
+    Map<string, NodeExecutionResult>
+  > {
+    const results = new Map<
+      string,
+      NodeExecutionResult
+    >();
 
     for (const stage of this.context.plan.stages) {
-      // Execute nodes in parallel within each stage
       const stageResults = await Promise.all(
-        stage.map((nodeId: string) => {
-          // In production, look up node from plan
-          // For now, create a placeholder
-          const node: DAGNode = {
-            id: nodeId,
-            type: 'compute',
-            executor: 'default',
-            payload: {},
-            metadata: { priority: 50, timeout_ms: 30000, retry_policy: { max_retries: 3, backoff_ms: 1000 } }
-          };
+        stage.map(nodeId => {
+          const node = this.context.nodes.get(nodeId);
+
+          if (!node) {
+            throw new Error(
+              `Planned node ${nodeId} not found in execution context`
+            );
+          }
+
           return this.executeNode(node);
-        })
+        }),
       );
 
       for (const result of stageResults) {

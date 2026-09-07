@@ -3,6 +3,7 @@ import { CounterfactualEngine } from '@agi-ecosystem/simulation-engine';
 import { MythosEngine } from '@agi-ecosystem/mythos-policy-engine';
 import { SwarmOrchestrator } from '@agi-ecosystem/swarm-runtime';
 import { HybridEventStore } from '@agi-ecosystem/event-store';
+import { CapabilityManager, EventEmitter } from '@agi-ecosystem/agent-os-runtime';
 import { CivilizationOrchestrator, LongHorizonPlanner } from '../index.js';
 
 export interface PipelineConfig {
@@ -17,6 +18,11 @@ export interface PipelineResult {
   simulation_passed: boolean;
   mythos_approved: boolean;
   swarm_job_id?: string;
+  swarm_result?: {
+    success: boolean;
+    dag_id: string;
+    results: Record<string, unknown>;
+  };
   events: string[];
   status: 'accepted' | 'rejected' | 'simulated' | 'failed';
 }
@@ -28,22 +34,31 @@ export class EndToEndPipeline {
   private swarm: SwarmOrchestrator;
   private eventStore: HybridEventStore;
   private civ: CivilizationOrchestrator;
+  private swarmInitialized = false;
+  private simulationEnabled: boolean;
 
   constructor(config: PipelineConfig) {
     this.dagCompiler = new DAGCompiler();
     this.simulator = new CounterfactualEngine();
     this.mythos = new MythosEngine();
     this.eventStore = config.event_store;
+    this.simulationEnabled = config.simulation_enabled;
 
     // Register policies
     for (const policy of config.mythos_policies) {
       this.mythos.registerPolicy(`policy-${Date.now()}`, policy);
     }
 
-    // Initialize swarm
-    const capabilityManager = {} as any; // TODO: inject real CapabilityManager
-    const eventEmitter = {} as any; // TODO: inject real EventEmitter
-    this.swarm = new SwarmOrchestrator(config.swarm_config, config.event_store, capabilityManager, eventEmitter);
+    // Initialize swarm with real runtime authorization/event services.
+    const capabilityManager = new CapabilityManager();
+    const eventEmitter = new EventEmitter();
+    this.swarm = new SwarmOrchestrator(
+      config.swarm_config,
+      config.event_store,
+      capabilityManager,
+      eventEmitter,
+      this.mythos
+    );
 
     const planner = new LongHorizonPlanner();
     this.civ = new CivilizationOrchestrator(planner, this.swarm, this.eventStore);
@@ -60,7 +75,7 @@ export class EndToEndPipeline {
 
       // Step 2: Simulation (counterfactual evaluation)
       let simulationPassed = true;
-      if (this.simulator) {
+      if (this.simulationEnabled) {
         const simResult = this.simulator.evaluate(dag);
         simulationPassed = simResult.confidence > 0.5;
         events.push('simulation_completed');
@@ -105,8 +120,16 @@ export class EndToEndPipeline {
       }
 
       // Step 4: Swarm Execution
-      // const jobId = await this.swarm.submitDAG(dag);
+      if (!this.swarmInitialized) {
+        await this.swarm.init();
+        this.swarmInitialized = true;
+      }
+
+      const jobId = await this.swarm.submitDAG(dag);
       events.push('swarm_submitted');
+
+      const swarmResult = await this.swarm.waitForJob(jobId);
+      events.push('swarm_completed');
 
       await this.eventStore.append('dag_accepted', {
           dag_id: dagId,
@@ -119,7 +142,8 @@ export class EndToEndPipeline {
         dag_id: dagId,
         simulation_passed: true,
         mythos_approved: true,
-        // swarm_job_id: jobId,
+        swarm_job_id: jobId,
+        swarm_result: swarmResult,
         events,
         status: 'accepted'
       };
@@ -137,6 +161,13 @@ export class EndToEndPipeline {
         events: [...events, 'error'],
         status: 'failed'
       };
+    }
+  }
+
+  async close(): Promise<void> {
+    if (this.swarmInitialized) {
+      await this.swarm.close();
+      this.swarmInitialized = false;
     }
   }
 

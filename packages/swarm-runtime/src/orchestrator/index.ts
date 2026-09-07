@@ -7,6 +7,7 @@ import {
   EventEmitter
 } from '@agi-ecosystem/agent-os-runtime';
 import { HybridEventStore } from '@agi-ecosystem/event-store';
+import { MythosEngine } from '@agi-ecosystem/mythos-policy-engine';
 import { DAGScheduler } from '../scheduler/index.js';
 import type { ScheduleResult } from '../scheduler/index.js';
 import { Queue, Worker } from 'bullmq';
@@ -24,6 +25,7 @@ export class SwarmOrchestrator {
   private capabilityManager: CapabilityManager;
   private eventEmitter: EventEmitter;
   private eventStore: HybridEventStore;
+  private mythos: MythosEngine;
   private queue: Queue;
   private workers: Worker[] = [];
   private workerProfileIds = new Map<string, string>();
@@ -33,17 +35,20 @@ export class SwarmOrchestrator {
     config: SwarmConfig,
     eventStore: HybridEventStore,
     capabilityManager: CapabilityManager,
-    eventEmitter: EventEmitter
+    eventEmitter: EventEmitter,
+    mythos: MythosEngine,
   ) {
     this.config = config;
     this.eventStore = eventStore;
     this.capabilityManager = capabilityManager;
     this.eventEmitter = eventEmitter;
+    this.mythos = mythos;
     this.scheduler = new DAGScheduler();
 
     const redis = new Redis({
       host: config.redis.host,
-      port: config.redis.port
+      port: config.redis.port,
+      maxRetriesPerRequest: null
     });
 
     this.queue = new Queue('dag-execution', {
@@ -68,7 +73,9 @@ export class SwarmOrchestrator {
             resource: 'compute',
             action: 'execute',
             scope: 'sandbox',
-            constraints: {}
+            constraints: {
+              executors: ['math.add', 'agent.analyze', 'store.result']
+            }
           },
           {
             id: 'memory_read',
@@ -92,7 +99,8 @@ export class SwarmOrchestrator {
 
     const redis = new Redis({
       host: this.config.redis.host,
-      port: this.config.redis.port
+      port: this.config.redis.port,
+      maxRetriesPerRequest: null
     });
 
     for (let i = 0; i < this.config.max_concurrent_agents; i++) {
@@ -101,12 +109,57 @@ export class SwarmOrchestrator {
         async (job: Job) => this.executeJob(job.data),
         {
           connection: redis,
-          concurrency: 5
+          concurrency: 5,
+          autorun: false
         }
       );
 
       this.workers.push(worker);
+      worker.run().catch((error) => {
+        this.eventStore.append('worker_failed', {
+          error: error instanceof Error ? error.message : String(error),
+          worker_id: `swarm-agent-${i}`
+        });
+      });
     }
+  }
+
+  async waitForJob(
+    jobId: string,
+    timeoutMs = 15000,
+    pollIntervalMs = 50,
+  ): Promise<{
+    success: boolean;
+    dag_id: string;
+    results: Record<string, unknown>;
+  }> {
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      const job = await this.queue.getJob(jobId);
+
+      if (!job) {
+        throw new Error(`Swarm job ${jobId} not found`);
+      }
+
+      const state = await job.getState();
+
+      if (state === 'completed') {
+        return job.returnvalue;
+      }
+
+      if (state === 'failed') {
+        throw new Error(
+          `Swarm job ${jobId} failed: ${job.failedReason ?? 'unknown error'}`
+        );
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    }
+
+    throw new Error(
+      `Timed out waiting for Swarm job ${jobId} after ${timeoutMs}ms`
+    );
   }
 
   async submitDAG(dag: DAG): Promise<string> {
@@ -170,13 +223,17 @@ export class SwarmOrchestrator {
               agent_id: profileId,
               session_id: sessionId,
               plan,
-              variables: results
+              variables: results,
+              nodes: new Map(
+                dag.nodes.map((candidate: any) => [candidate.id, candidate]),
+              ),
             };
 
             const executor = new AgentExecutor(
               context,
               this.capabilityManager,
-              this.eventEmitter
+              this.eventEmitter,
+              this.mythos,
             );
 
             const node = dag.nodes.find(

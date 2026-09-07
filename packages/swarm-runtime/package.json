@@ -19,7 +19,8 @@
     "@agi-ecosystem/dag-compiler": "workspace:*",
     "@agi-ecosystem/event-store": "workspace:*",
     "bullmq": "^5.7.0",
-    "ioredis": "^5.4.1"
+    "ioredis": "^5.4.1",
+    "@agi-ecosystem/mythos-policy-engine": "workspace:*"
   },
   "devDependencies": {
     "typescript": "*",

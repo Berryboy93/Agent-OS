@@ -261,6 +261,40 @@ importers:
 
   packages/api-types: {}
 
+  packages/civilization-orchestrator:
+    dependencies:
+      '@agi-ecosystem/agent-os':
+        specifier: workspace:*
+        version: link:../agent-os
+      '@agi-ecosystem/dag-compiler':
+        specifier: workspace:*
+        version: link:../dag-compiler
+      '@agent-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@agent-os/events':
+        specifier: workspace:*
+        version: link:../events
+      '@agi-ecosystem/swarm-runtime':
+        specifier: workspace:*
+        version: link:../swarm-runtime
+      '@agi-ecosystem/simulation-engine':
+        specifier: workspace:*
+        version: link:../simulation-engine
+      '@agi-ecosystem/mythos-policy-engine':
+        specifier: workspace:*
+        version: link:../mythos-policy-engine
+      '@agi-ecosystem/event-store':
+        specifier: workspace:*
+        version: link:../event-store
+      '@agi-ecosystem/agent-os-runtime':
+        specifier: workspace:*
+        version: link:../agent-os-runtime
+    devDependencies:
+      typescript:
+        specifier: '*'
+        version: 5.9.3
+
   packages/cli:
     dependencies:
       '@agent-os/core':
@@ -630,6 +664,34 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^1.5.0
+        version: 1.6.1(@types/node@22.13.14)(lightningcss@1.32.0)(supports-color@10.2.2)
+
+  packages/swarm-runtime:
+    dependencies:
+      '@agi-ecosystem/agent-os-runtime':
+        specifier: workspace:*
+        version: link:../agent-os-runtime
+      '@agi-ecosystem/dag-compiler':
+        specifier: workspace:*
+        version: link:../dag-compiler
+      '@agi-ecosystem/event-store':
+        specifier: workspace:*
+        version: link:../event-store
+      bullmq:
+        specifier: ^5.7.0
+        version: 5.81.4
+      ioredis:
+        specifier: ^5.4.1
+        version: 5.4.1
+      '@agi-ecosystem/mythos-policy-engine':
+        specifier: workspace:*
+        version: link:../mythos-policy-engine
+    devDependencies:
+      typescript:
+        specifier: '*'
+        version: 5.9.3
+      vitest:
+        specifier: '*'
         version: 1.6.1(@types/node@22.13.14)(lightningcss@1.32.0)(supports-color@10.2.2)
 
   packages/telemetry:
