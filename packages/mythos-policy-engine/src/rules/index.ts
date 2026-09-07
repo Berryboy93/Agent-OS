@@ -1,9 +1,23 @@
 import type { ParsedPolicy } from '../dsl/index.js';
 import { MythosParser } from '../dsl/index.js';
-import { MythosEvaluator, type EvaluationContext, type PolicyDecision } from '../evaluator/index.js';
+import {
+  MythosEvaluator,
+  type EvaluationContext,
+  type PolicyDecision,
+} from '../evaluator/index.js';
 
 export interface PolicyRegistry {
-  [name: string]: string; // policy name -> DSL source
+  [name: string]: string;
+}
+
+export interface PolicyEvaluationInput {
+  agent_id: string;
+  risk_score?: number;
+  trust_level?: number;
+  payload?: Record<string, unknown>;
+  data?: Record<string, unknown>;
+  risk_threshold?: number;
+  [key: string]: unknown;
 }
 
 export class MythosEngine {
@@ -18,29 +32,44 @@ export class MythosEngine {
     this.registry[name] = dslSource;
   }
 
-  evaluate(eventType: string, context: Omit<EvaluationContext, 'event_type'>): PolicyDecision {
-    const fullContext: EvaluationContext = { ...context, event_type: eventType };
+  evaluate(
+    eventType: string,
+    context: PolicyEvaluationInput,
+  ): PolicyDecision {
+    const fullContext: EvaluationContext = {
+      ...context,
+      event_type: eventType,
+    };
+
     const allReasons: string[] = [];
 
-    // Mythos overrides all — evaluate all registered policies
     for (const [name, policy] of this.policies) {
       const decision = this.evaluator.evaluate(fullContext, policy);
+
       if (!decision.allowed) {
-        // First deny wins (Mythos is strict)
         return {
           allowed: false,
-          reasons: [`[${name}] ${decision.reasons.join('; ')}`]
+          reasons: decision.reasons.map(
+            reason => `[${name}] ${reason}`,
+          ),
+          rule: decision.rule,
+          action: decision.action,
         };
       }
-      // Track reasons from passing policies
-      if (decision.reasons.length > 0) {
-        allReasons.push(...decision.reasons.map(r => `[${name}] ${r}`));
-      }
+
+      allReasons.push(
+        ...decision.reasons.map(
+          reason => `[${name}] ${reason}`,
+        ),
+      );
     }
 
     return {
       allowed: true,
-      reasons: allReasons.length > 0 ? allReasons : [`All ${this.policies.size} policies passed`]
+      reasons:
+        allReasons.length > 0
+          ? allReasons
+          : [`All ${this.policies.size} policies passed`],
     };
   }
 
