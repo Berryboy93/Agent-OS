@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && mkdir -p dist/sandbox && cp src/sandbox/runner.mjs dist/sandbox/runner.mjs",
     "test": "vitest run",
     "dev": "tsx watch src/index.ts"
   },
@@ -20,7 +20,6 @@
     "@agi-ecosystem/event-store": "workspace:*",
     "@agi-ecosystem/mythos-policy-engine": "workspace:*",
     "uuid": "^9.0.1",
-    "vm2": "^3.9.19",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -226,9 +226,6 @@ importers:
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
-      vm2:
-        specifier: ^3.9.19
-        version: 3.11.6
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -4167,11 +4164,6 @@ packages:
       jsdom:
         optional: true
 
-  vm2@3.11.6:
-    resolution: {integrity: sha512-35hVTcKieg7jJMntHhgWT5c2a1J2vmpXm66Xs1Z8ayHOJTj8rzIlXKzba3nO1Om/sonmnkjlAOMt9p8lYJXsWw==}
-    engines: {node: '>=6.0'}
-    hasBin: true
-
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
@@ -7633,11 +7625,6 @@ snapshots:
       '@types/node': 25.9.5
     transitivePeerDependencies:
       - msw
-
-  vm2@3.11.6:
-    dependencies:
-      acorn: 8.18.0
-      acorn-walk: 8.3.5
 
   web-streams-polyfill@3.3.3: {}
 
