@@ -30,6 +30,6 @@
     "@types/uuid": "^11.0.0",
     "better-sqlite3": "^9.6.0",
     "typescript": "*",
-    "vitest": "^4.1.7"
+    "vitest": "^3.2.6"
   }
 }
