@@ -145,7 +145,22 @@ export class SwarmOrchestrator {
       const state = await job.getState();
 
       if (state === 'completed') {
-        return job.returnvalue;
+        // The Job instance may have been hydrated while the worker was still
+        // processing it. Re-read the completed job so returnvalue comes from
+        // the persisted BullMQ record rather than stale in-memory state.
+        const completedJob = await this.queue.getJob(jobId);
+
+        if (!completedJob) {
+          throw new Error(`Swarm job ${jobId} disappeared after completion`);
+        }
+
+        if (completedJob.returnvalue === undefined) {
+          throw new Error(
+            `Swarm job ${jobId} completed without a persisted return value`
+          );
+        }
+
+        return completedJob.returnvalue;
       }
 
       if (state === 'failed') {
