@@ -3,10 +3,17 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true
+    "composite": true,
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../core" }
+    {
+      "path": "../core"
+    }
   ]
 }

@@ -6,21 +6,21 @@ const sampleDAG = {
   version: '2.0.0',
   nodes: [
     {
-      id: 'a1',
+      id: '11111111-1111-4111-8111-111111111111',
       type: 'compute',
       executor: 'math.add',
       payload: { a: 1, b: 2 },
       metadata: { priority: 80, timeout_ms: 1000 }
     },
     {
-      id: 'a2',
+      id: '22222222-2222-4222-8222-222222222222',
       type: 'agent_task',
       executor: 'agent.analyze',
       payload: { query: 'test' },
       metadata: { priority: 90, timeout_ms: 5000, retry_policy: { max_retries: 2 } }
     },
     {
-      id: 'a3',
+      id: '33333333-3333-4333-8333-333333333333',
       type: 'memory_write',
       executor: 'store.result',
       payload: { key: 'output' },
@@ -28,16 +28,17 @@ const sampleDAG = {
     }
   ],
   edges: [
-    { from: 'a1', to: 'a2' },
-    { from: 'a2', to: 'a3' }
+    { from: '11111111-1111-4111-8111-111111111111', to: '22222222-2222-4222-8222-222222222222' },
+    { from: '22222222-2222-4222-8222-222222222222', to: '33333333-3333-4333-8333-333333333333' }
   ],
-  entrypoint: 'a1'
+  entrypoint: '11111111-1111-4111-8111-111111111111'
 };
 
 describe('DAGCompiler', () => {
   it('compiles a valid DAG into an execution plan', () => {
     const compiler = new DAGCompiler();
-    const plan = compiler.compile(sampleDAG as any);
+    const dag = DAGParser.fromJSON(JSON.stringify(sampleDAG));
+    const plan = compiler.compile(dag);
 
     expect(plan.dag_id).toBe(sampleDAG.id);
     expect(plan.stages.length).toBe(3); // sequential in this case
@@ -50,13 +51,14 @@ describe('DAGCompiler', () => {
     const cyclic = {
       ...sampleDAG,
       edges: [
-        { from: 'a1', to: 'a2' },
-        { from: 'a2', to: 'a3' },
-        { from: 'a3', to: 'a1' } // cycle!
+        { from: '11111111-1111-4111-8111-111111111111', to: '22222222-2222-4222-8222-222222222222' },
+        { from: '22222222-2222-4222-8222-222222222222', to: '33333333-3333-4333-8333-333333333333' },
+        { from: '33333333-3333-4333-8333-333333333333', to: '11111111-1111-4111-8111-111111111111' } // cycle!
       ]
     };
     const compiler = new DAGCompiler();
-    expect(() => compiler.compile(cyclic as any)).toThrow('Cycle detected');
+    const dag = DAGParser.fromJSON(JSON.stringify(cyclic));
+    expect(() => compiler.compile(dag)).toThrow('Cycle detected');
   });
 
   it('parses JSON DAG', () => {
@@ -69,6 +71,8 @@ describe('DAGCompiler', () => {
     const dag = DAGParser.fromJSON(JSON.stringify(sampleDAG));
     const dot = DAGParser.toDOT(dag);
     expect(dot).toContain('digraph DAG');
-    expect(dot).toContain('a1 -> a2');
+    expect(dot).toContain(
+      '"11111111-1111-4111-8111-111111111111" -> "22222222-2222-4222-8222-222222222222"'
+    );
   });
 });

@@ -10,24 +10,52 @@ MythosPolicy {
   IfClause = "if" ":" Condition
   Condition = Expression
 
-  Expression = Identifier CompOp Value
-             | Identifier "." Identifier CompOp Value
-             | "(" Expression "and" Expression ")"
-             | "(" Expression "or" Expression ")"
+  Expression
+    = ComparisonExpression
+    | AndExpression
+    | OrExpression
+
+  ComparisonExpression
+    = BasicComparison
+    | MemberComparison
+
+  BasicComparison
+    = Identifier CompOp Value
+
+  MemberComparison
+    = MemberIdentifier CompOp Value
+
+  MemberIdentifier
+    = Identifier "." Identifier
+
+  AndExpression
+    = "(" Expression "and" Expression ")"
+
+  OrExpression
+    = "(" Expression "or" Expression ")"
 
   ThenClause = "then" ":" Action ("," Action)*
-  Action = "reject" | "log_event" | "escalate" | "sandbox" | "audit" | "notify"
-         | Action "(" String ")"
+  Action
+    = ParameterizedAction
+    | SimpleAction
+
+  SimpleAction
+    = "reject"
+    | "log_event"
+    | "escalate"
+    | "sandbox"
+    | "audit"
+    | "notify"
+
+  ParameterizedAction
+    = SimpleAction "(" String ")"
 
   CompOp = ">" | "<" | ">=" | "<=" | "==" | "!="
 
-  String = "\"" any* "\""
+  String = "\"" (~"\"" any)* "\""
   Identifier = letter (alnum | "_" | ".")*
   Value = number | String | "true" | "false"
 
   number = digit+ ("." digit+)?
-  letter = "a".."z" | "A".."Z"
-  alnum = letter | digit
-  digit = "0".."9"
 }
 `;

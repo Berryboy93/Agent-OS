@@ -13,3 +13,13 @@ tokens.json
 vitest.config.ts.timestamp-*.mjs
 packages/control-plane/db/
 packages/mythos-engine/src/grammar.js
+
+# Local repair/recovery artifacts
+.repair-backups/
+packages/mythos-policy-engine/src/dsl/grammar.ne.bak
+packages/mythos-policy-engine/src/dsl/grammar.ne.bak.*
+
+packages/event-store/.env.test.local
+
+# Local rollback/quarantine artifacts
+.quarantine/

@@ -7,11 +7,14 @@ export function createCommandCenterRoutes(service: CommandCenterService): Router
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
+  const qs = (v: unknown): string | undefined =>
+    Array.isArray(v) ? v[0] : typeof v === 'string' ? v : undefined;
+
   router.get('/runs', asyncHandler(async (req: Request, res: Response) => {
     const result = await service.listRuns({
-      status: req.query.status as string | undefined,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-      offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      status: qs(req.query.status),
+      limit: req.query.limit ? parseInt(qs(req.query.limit) ?? '0') : undefined,
+      offset: req.query.offset ? parseInt(qs(req.query.offset) ?? '0') : undefined
     });
     res.json(result);
   }));
@@ -24,14 +27,14 @@ export function createCommandCenterRoutes(service: CommandCenterService): Router
   }));
 
   router.get('/runs/:runId', asyncHandler(async (req: Request, res: Response) => {
-    const run = await service.getRun(req.params.runId);
+    const run = await service.getRun(qs(req.params.runId)!);
     res.json(run);
   }));
 
   router.patch('/runs/:runId/status', asyncHandler(async (req: Request, res: Response) => {
     const { status } = req.body;
     if (!status) return res.status(400).json({ error: 'status field required' });
-    const run = await service.updateRunStatus(req.params.runId, status);
+    const run = await service.updateRunStatus(qs(req.params.runId)!, status);
     res.json(run);
   }));
 

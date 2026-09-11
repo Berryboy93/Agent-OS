@@ -7,14 +7,21 @@
     "declaration": true,
     "declarationMap": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@agent-os/*": ["../*/src"]
+      "@agent-os/*": [
+        "../*/src"
+      ]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../core" },
-    { "path": "../runtime" }
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../runtime"
+    }
   ]
 }

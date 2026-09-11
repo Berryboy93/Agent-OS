@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@agi-ecosystem/agent-os": "workspace:*",

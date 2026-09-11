@@ -3,12 +3,24 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     globals: true,
-
     environment: 'node',
 
     include: [
-      '**/__tests__/**/*.test.ts',
-      '**/__tests__/**/*.spec.ts',
+      '**/tests/**/*.{test,spec}.ts',
+      '**/__tests__/**/*.{test,spec}.ts',
+    ],
+
+    exclude: [
+      '**/node_modules/**',
+      '**/.git/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.audit/**',
+      '**/.deployment-backups/**',
+      '**/.refactor-backups/**',
+      '**/.type-repair-backups/**',
+      '**/.quarantine/**',
+      '**/src.stub-backup/**',
     ],
 
     coverage: {
@@ -23,9 +35,15 @@ export default defineConfig({
       reportsDirectory: './coverage',
 
       exclude: [
-        'node_modules/',
-        'dist/',
-        'coverage/',
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/coverage/**',
+        '**/.audit/**',
+        '**/.deployment-backups/**',
+        '**/.refactor-backups/**',
+        '**/.type-repair-backups/**',
+        '**/.quarantine/**',
+        '**/src.stub-backup/**',
       ],
     },
   },

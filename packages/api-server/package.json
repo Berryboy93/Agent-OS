@@ -12,9 +12,9 @@
     "@agent-os/core": "workspace:*",
     "@agent-os/runtime": "workspace:*",
     "@types/express": "^5.0.6",
-    "express": "^4.19.2"
+    "express": "^5.2.1"
   },
   "devDependencies": {
-    "typescript": "*"
+    "typescript": "^7.0.2"
   }
 }
