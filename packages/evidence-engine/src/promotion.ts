@@ -1,3 +1,4 @@
+import { verifyEvidenceHash } from "./hash.js";
 import { scoreEvidence } from "./scorer.js";
 import type {
   EvidenceEvaluationInput,
@@ -14,6 +15,15 @@ export function evaluatePromotion(
   } = input;
 
   const score = scoreEvidence(bundle);
+
+  if (!verifyEvidenceHash(bundle)) {
+    return {
+      decision: "reject",
+      score,
+      reasons: ["Evidence bundle integrity verification failed"],
+      evidenceHash: bundle.evidenceHash,
+    };
+  }
   const reasons: string[] = [];
 
   const criticalFailures = bundle.checks.filter(
@@ -59,6 +69,7 @@ export function evaluatePromotion(
       decision: "promote",
       score,
       reasons: ["All promotion gates passed"],
+      evidenceHash: bundle.evidenceHash,
     };
   }
 
@@ -67,6 +78,7 @@ export function evaluatePromotion(
       decision: "rollback",
       score,
       reasons,
+      evidenceHash: bundle.evidenceHash,
     };
   }
 
@@ -75,6 +87,7 @@ export function evaluatePromotion(
       decision: "human_review",
       score,
       reasons,
+      evidenceHash: bundle.evidenceHash,
     };
   }
 
@@ -82,5 +95,6 @@ export function evaluatePromotion(
     decision: "reject",
     score,
     reasons,
+    evidenceHash: bundle.evidenceHash,
   };
 }

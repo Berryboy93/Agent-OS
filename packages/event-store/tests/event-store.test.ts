@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { PostgresEventStore } from '../src/index.js';
 
@@ -6,6 +7,8 @@ import { PostgresEventStore } from '../src/index.js';
 
 describe('PostgresEventStore', () => {
   let store: PostgresEventStore;
+  const tableName =
+    `events_test_${randomUUID().replace(/-/g, '')}`;
 
   beforeAll(async () => {
     store = new PostgresEventStore({
@@ -14,7 +17,7 @@ describe('PostgresEventStore', () => {
       database: process.env.TEST_DB_NAME || 'agi_test',
       user: process.env.TEST_DB_USER || 'postgres',
       password: process.env.TEST_DB_PASSWORD || 'postgres'
-    });
+    }, tableName);
     await store.init();
   });
 
@@ -52,4 +55,5 @@ describe('PostgresEventStore', () => {
     const result = await store.verifyChain();
     expect(result.valid).toBe(true);
   });
+
 });

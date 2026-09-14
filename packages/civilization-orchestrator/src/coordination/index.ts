@@ -1,6 +1,18 @@
 import { LongHorizonPlanner, ExecutionStrategy, ExecutionPhase } from '../long-horizon/index.js';
 import { SwarmOrchestrator } from '@agi-ecosystem/swarm-runtime';
 import { HybridEventStore } from '@agi-ecosystem/event-store';
+import {
+  EvidenceRecorder,
+  type EvidenceCheck,
+  type EvidenceStore,
+  type PromotionResult,
+} from '@agi-ecosystem/evidence-engine';
+import { evaluateExecutionPromotion } from '../promotion-gate.js';
+import {
+  collectExecutionVerification,
+  type ExecutionVerificationResult,
+} from '../execution-verification.js';
+import type { TrustedVerificationProfileId } from '../verification-profiles.js';
 
 export interface CoordinationSession {
   id: string;
@@ -12,20 +24,54 @@ export interface CoordinationSession {
   updated_at: Date;
 }
 
+export interface CoordinationConfig {
+  evidence_store: EvidenceStore;
+  verification_profile_ids?: readonly TrustedVerificationProfileId[];
+  verification_collector?: (options: {
+    repositoryRoot?: string;
+    profileIds?: readonly TrustedVerificationProfileId[];
+  }) => Promise<ExecutionVerificationResult>;
+}
+
+export interface PhaseExecutionResult {
+  phase_id: string;
+  status: 'promoted' | 'human_review' | 'rejected' | 'failed';
+  dag_results: Array<{
+    dag_id: string;
+    swarm_job_id: string;
+    success: boolean;
+  }>;
+  promotions: PromotionResult[];
+}
+
 export class CivilizationOrchestrator {
   private planner: LongHorizonPlanner;
   private swarm: SwarmOrchestrator;
   private eventStore: HybridEventStore;
+  private readonly evidenceRecorder: EvidenceRecorder;
+  private readonly verificationProfileIds:
+    readonly TrustedVerificationProfileId[] | undefined;
+  private readonly verificationCollector: NonNullable<
+    CoordinationConfig['verification_collector']
+  >;
   private sessions = new Map<string, CoordinationSession>();
 
   constructor(
     planner: LongHorizonPlanner,
     swarm: SwarmOrchestrator,
-    eventStore: HybridEventStore
+    eventStore: HybridEventStore,
+    config: CoordinationConfig,
   ) {
     this.planner = planner;
     this.swarm = swarm;
     this.eventStore = eventStore;
+    this.evidenceRecorder = new EvidenceRecorder(config.evidence_store);
+    this.verificationProfileIds = config.verification_profile_ids
+      ? [...config.verification_profile_ids]
+      : undefined;
+    this.verificationCollector =
+      config.verification_collector ??
+      collectExecutionVerification;
   }
 
   async initiateGoal(goalId: string): Promise<CoordinationSession> {
@@ -53,7 +99,10 @@ export class CivilizationOrchestrator {
     return session;
   }
 
-  async executePhase(sessionId: string, phaseIndex: number): Promise<void> {
+  async executePhase(
+    sessionId: string,
+    phaseIndex: number
+  ): Promise<PhaseExecutionResult> {
     const session = this.sessions.get(sessionId);
     if (!session) throw new Error(`Session ${sessionId} not found`);
     if (session.status !== 'planning' && session.status !== 'executing') {
@@ -76,17 +125,203 @@ export class CivilizationOrchestrator {
     session.current_phase = phaseIndex;
     session.updated_at = new Date();
 
-    // Submit all DAGs in phase to swarm
-    for (const dag of phase.dags) {
-      await this.swarm.submitDAG(dag);
-    }
+    const dagResults: PhaseExecutionResult['dag_results'] = [];
+    const promotions: PromotionResult[] = [];
 
-    await this.eventStore.append('phase_started', {
+    try {
+      for (const dag of phase.dags) {
+        const swarmJobId = await this.swarm.submitDAG(dag);
+        const swarmResult = await this.swarm.waitForJob(swarmJobId);
+
+        dagResults.push({
+          dag_id: dag.id,
+          swarm_job_id: swarmJobId,
+          success: swarmResult.success,
+        });
+
+        const verification = await this.verificationCollector({
+          repositoryRoot:
+            process.env.NATIVE_SHIFT_REPOSITORY_ROOT ??
+            process.cwd(),
+          profileIds: this.verificationProfileIds,
+        });
+
+        await this.eventStore.append('verification_completed', {
+          session_id: sessionId,
+          phase_id: phase.id,
+          dag_id: dag.id,
+          swarm_job_id: swarmJobId,
+          profile_ids: verification.profileIds,
+        });
+
+        const checks: EvidenceCheck[] = [
+          {
+            id: `runtime:${dag.id}`,
+            category: 'runtime',
+            status: swarmResult.success ? 'passed' : 'failed',
+            required: true,
+            critical: true,
+            metadata: {
+              session_id: sessionId,
+              phase_id: phase.id,
+              dag_id: dag.id,
+              swarm_job_id: swarmJobId,
+            },
+          },
+          ...verification.checks,
+        ];
+
+        const { promotion } = evaluateExecutionPromotion({
+          runId: swarmJobId,
+          taskId: dag.id,
+          baseRevision: dag.version,
+          operations: [`execute-phase:${phase.id}`, `execute-dag:${dag.id}`],
+          checks,
+        });
+
+        promotions.push(promotion);
+
+        await this.eventStore.append('promotion_decided', {
+          session_id: sessionId,
+          phase_id: phase.id,
+          dag_id: dag.id,
+          swarm_job_id: swarmJobId,
+          decision: promotion.decision,
+          score: promotion.score,
+          reasons: promotion.reasons,
+          evidence_hash: promotion.evidenceHash,
+        });
+
+        if (promotion.decision === 'human_review') {
+          await this.eventStore.append('dag_human_review', {
+            session_id: sessionId,
+            phase_id: phase.id,
+            dag_id: dag.id,
+            promotion,
+            evidence_hash: promotion.evidenceHash,
+          });
+        } else if (promotion.decision === 'reject') {
+          await this.eventStore.append('dag_rejected_promotion', {
+            session_id: sessionId,
+            phase_id: phase.id,
+            dag_id: dag.id,
+            promotion,
+            evidence_hash: promotion.evidenceHash,
+          });
+          } else if (promotion.decision === 'rollback') {
+            await this.eventStore.append('dag_rollback_required', {
+              session_id: sessionId,
+              phase_id: phase.id,
+              dag_id: dag.id,
+              promotion,
+              evidence_hash: promotion.evidenceHash,
+            });
+        } else {
+          await this.eventStore.append('dag_accepted', {
+            session_id: sessionId,
+            phase_id: phase.id,
+            dag_id: dag.id,
+            evidence_hash: promotion.evidenceHash,
+          });
+        }
+      }
+
+      const allPromoted =
+        promotions.length > 0 &&
+        promotions.every((promotion) => promotion.decision === 'promote');
+
+        const hasRollback = promotions.some(
+          (promotion) => promotion.decision === 'rollback',
+        );
+
+      const hasRejection = promotions.some(
+        (promotion) => promotion.decision === 'reject',
+      );
+
+      if (allPromoted) {
+        await this.eventStore.append('phase_started', {
+          session_id: sessionId,
+          phase_id: phase.id,
+          phase_name: phase.name,
+          dag_count: phase.dags.length,
+        });
+
+        return {
+          phase_id: phase.id,
+          status: 'promoted',
+          dag_results: dagResults,
+          promotions,
+        };
+      }
+
+        if (hasRollback) {
+          session.status = 'paused';
+          session.updated_at = new Date();
+
+          await this.eventStore.append('phase_rollback_required', {
+            session_id: sessionId,
+            phase_id: phase.id,
+            promotions,
+          });
+
+          return {
+            phase_id: phase.id,
+            status: 'failed',
+            dag_results: dagResults,
+            promotions,
+          };
+        }
+
+      if (hasRejection) {
+        session.status = 'failed';
+        session.updated_at = new Date();
+
+        await this.eventStore.append('phase_rejected_promotion', {
+          session_id: sessionId,
+          phase_id: phase.id,
+          promotions,
+        });
+
+        return {
+          phase_id: phase.id,
+          status: 'rejected',
+          dag_results: dagResults,
+          promotions,
+        };
+      }
+
+      session.status = 'paused';
+      session.updated_at = new Date();
+
+      await this.eventStore.append('phase_human_review', {
         session_id: sessionId,
         phase_id: phase.id,
-        phase_name: phase.name,
-        dag_count: phase.dags.length
+        promotions,
       });
+
+      return {
+        phase_id: phase.id,
+        status: 'human_review',
+        dag_results: dagResults,
+        promotions,
+      };
+    } catch (error) {
+      session.status = 'failed';
+      session.updated_at = new Date();
+
+      await this.eventStore.append('phase_execution_failed', {
+        session_id: sessionId,
+        phase_id: phase.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      return {
+        phase_id: phase.id,
+        status: 'failed',
+        dag_results: dagResults,
+        promotions,
+      };
+    }
   }
 
   async checkpoint(sessionId: string): Promise<{ passed: boolean; action: string }> {

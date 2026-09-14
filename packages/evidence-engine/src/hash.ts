@@ -24,3 +24,8 @@ export function hashEvidence(bundle: Omit<EvidenceBundle, "evidenceHash">): stri
     .update(stableJson(bundle))
     .digest("hex");
 }
+
+export function verifyEvidenceHash(bundle: EvidenceBundle): boolean {
+  const { evidenceHash, ...unsigned } = bundle;
+  return hashEvidence(unsigned) === evidenceHash;
+}

@@ -1,6 +1,6 @@
 {
   "name": "@agi-ecosystem/evidence-engine",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -16,7 +16,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@agi-ecosystem/event-store": "workspace:*"
+  },
   "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   }
 }

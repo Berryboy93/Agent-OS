@@ -35,17 +35,17 @@ export function scoreEvidence(
 
   const testConfidence =
     tests.length === 0
-      ? completeness
+      ? 0
       : ratio(tests.length, testPassed);
 
   const buildConfidence =
     builds.length === 0
-      ? completeness
+      ? 0
       : ratio(builds.length, buildPassed);
 
   const securityConfidence =
     security.length === 0
-      ? completeness
+      ? 0
       : ratio(security.length, securityPassed);
 
   const overall =

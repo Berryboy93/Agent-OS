@@ -4,6 +4,13 @@ import { MythosEngine } from '@agi-ecosystem/mythos-policy-engine';
 import { SwarmOrchestrator } from '@agi-ecosystem/swarm-runtime';
 import { HybridEventStore } from '@agi-ecosystem/event-store';
 import { CapabilityManager, EventEmitter } from '@agi-ecosystem/agent-os-runtime';
+import { InMemoryEvidenceStore, type PromotionResult } from '@agi-ecosystem/evidence-engine';
+import { evaluateExecutionPromotion } from '../promotion-gate.js';
+import {
+  collectExecutionVerification,
+  type ExecutionVerificationResult,
+} from '../execution-verification.js';
+import type { TrustedVerificationProfileId } from '../verification-profiles.js';
 import { CivilizationOrchestrator, LongHorizonPlanner } from '../index.js';
 
 export interface PipelineConfig {
@@ -11,6 +18,13 @@ export interface PipelineConfig {
   simulation_enabled: boolean;
   swarm_config: ConstructorParameters<typeof SwarmOrchestrator>[0];
   event_store: HybridEventStore;
+  verification_profile_ids?: readonly TrustedVerificationProfileId[];
+  verification_collector?: (
+    options?: {
+      repositoryRoot?: string;
+      profileIds?: readonly TrustedVerificationProfileId[];
+    },
+  ) => Promise<ExecutionVerificationResult>;
 }
 
 export interface PipelineResult {
@@ -23,8 +37,9 @@ export interface PipelineResult {
     dag_id: string;
     results: Record<string, unknown>;
   };
+  promotion?: PromotionResult;
   events: string[];
-  status: 'accepted' | 'rejected' | 'simulated' | 'failed';
+  status: 'accepted' | 'rejected' | 'simulated' | 'human_review' | 'failed';
 }
 
 export class EndToEndPipeline {
@@ -36,6 +51,11 @@ export class EndToEndPipeline {
   private civ: CivilizationOrchestrator;
   private swarmInitialized = false;
   private simulationEnabled: boolean;
+  private readonly verificationProfileIds:
+    readonly TrustedVerificationProfileId[] | undefined;
+  private readonly verificationCollector: NonNullable<
+    PipelineConfig['verification_collector']
+  >;
 
   constructor(config: PipelineConfig) {
     this.dagCompiler = new DAGCompiler();
@@ -43,6 +63,12 @@ export class EndToEndPipeline {
     this.mythos = new MythosEngine();
     this.eventStore = config.event_store;
     this.simulationEnabled = config.simulation_enabled;
+    this.verificationProfileIds = config.verification_profile_ids
+      ? [...config.verification_profile_ids]
+      : undefined;
+    this.verificationCollector =
+      config.verification_collector ??
+      collectExecutionVerification;
 
     // Register policies
     for (const policy of config.mythos_policies) {
@@ -61,7 +87,17 @@ export class EndToEndPipeline {
     );
 
     const planner = new LongHorizonPlanner();
-    this.civ = new CivilizationOrchestrator(planner, this.swarm, this.eventStore);
+      const evidenceStore = new InMemoryEvidenceStore();
+    this.civ = new CivilizationOrchestrator(
+      planner,
+      this.swarm,
+      this.eventStore,
+      {
+        evidence_store: evidenceStore,
+        verification_profile_ids: this.verificationProfileIds,
+        verification_collector: this.verificationCollector,
+      },
+    );
   }
 
   async process(dag: DAG): Promise<PipelineResult> {
@@ -131,12 +167,104 @@ export class EndToEndPipeline {
       const swarmResult = await this.swarm.waitForJob(jobId);
       events.push('swarm_completed');
 
-      await this.eventStore.append('dag_accepted', {
+        const verification = await this.verificationCollector({
+          repositoryRoot:
+            process.env.NATIVE_SHIFT_REPOSITORY_ROOT ??
+            process.cwd(),
+          profileIds: this.verificationProfileIds,
+        });
+
+        events.push('verification_completed');
+
+        const { promotion } = evaluateExecutionPromotion({
+          runId: jobId,
+          taskId: dagId,
+          baseRevision: dag.version,
+          operations: [`execute-dag:${dagId}`],
+          checks: [
+            {
+              id: `runtime:${dagId}`,
+              category: 'runtime',
+              status: swarmResult.success ? 'passed' : 'failed',
+              required: true,
+              critical: true,
+              metadata: {
+                dag_id: dagId,
+                swarm_job_id: jobId,
+              },
+            },
+            {
+              id: `policy:${dagId}`,
+              category: 'policy',
+              status: mythosDecision.allowed ? 'passed' : 'failed',
+              required: true,
+              critical: true,
+              metadata: {
+                dag_id: dagId,
+              },
+            },
+            ...verification.checks,
+          ],
+        });
+
+      events.push('promotion_evaluated');
+
+      await this.eventStore.append('promotion_decided', {
+        dag_id: dagId,
+        swarm_job_id: jobId,
+        decision: promotion.decision,
+        score: promotion.score,
+        reasons: promotion.reasons,
+        evidence_hash: promotion.evidenceHash,
+      });
+
+      if (promotion.decision === 'promote') {
+        await this.eventStore.append('dag_accepted', {
           dag_id: dagId,
           plan,
           simulation_passed: simulationPassed,
-          mythos_approved: true
+          mythos_approved: true,
+          evidence_hash: promotion.evidenceHash,
         });
+
+        return {
+          dag_id: dagId,
+          simulation_passed: true,
+          mythos_approved: true,
+          swarm_job_id: jobId,
+          swarm_result: swarmResult,
+          promotion,
+          events,
+          status: 'accepted',
+        };
+      }
+
+      if (promotion.decision === 'human_review') {
+        await this.eventStore.append('dag_human_review', {
+          dag_id: dagId,
+          plan,
+          promotion,
+          evidence_hash: promotion.evidenceHash,
+        });
+
+        return {
+          dag_id: dagId,
+          simulation_passed: true,
+          mythos_approved: true,
+          swarm_job_id: jobId,
+          swarm_result: swarmResult,
+          promotion,
+          events,
+          status: 'human_review',
+        };
+      }
+
+      await this.eventStore.append('dag_rejected_promotion', {
+        dag_id: dagId,
+        plan,
+        promotion,
+        evidence_hash: promotion.evidenceHash,
+      });
 
       return {
         dag_id: dagId,
@@ -144,8 +272,9 @@ export class EndToEndPipeline {
         mythos_approved: true,
         swarm_job_id: jobId,
         swarm_result: swarmResult,
+        promotion,
         events,
-        status: 'accepted'
+        status: 'rejected',
       };
 
     } catch (error) {

@@ -30,6 +30,7 @@ export interface EventQuery {
   dag_id?: string;
   agent_id?: string;
   session_id?: string;
+  after_sequence?: number;
   limit?: number;
 }
 
@@ -260,6 +261,11 @@ export class PostgresEventStore {
       if (query.session_id) {
         params.push(query.session_id);
         filters.push(`session_id = $${params.length}`);
+      }
+
+      if (query.after_sequence !== undefined) {
+        params.push(query.after_sequence);
+        filters.push(`sequence_number > $${params.length}`);
       }
 
       limit = query.limit ?? limit;

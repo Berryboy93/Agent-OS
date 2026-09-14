@@ -17,7 +17,8 @@
     "@agi-ecosystem/simulation-engine": "workspace:*",
     "@agi-ecosystem/mythos-policy-engine": "workspace:*",
     "@agi-ecosystem/event-store": "workspace:*",
-    "@agi-ecosystem/agent-os-runtime": "workspace:*"
+    "@agi-ecosystem/agent-os-runtime": "workspace:*",
+    "@agi-ecosystem/evidence-engine": "workspace:*"
   },
   "devDependencies": {
     "typescript": "*"

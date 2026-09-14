@@ -56,6 +56,7 @@ export interface PromotionResult {
   decision: PromotionDecision;
   score: ConfidenceScore;
   reasons: string[];
+  evidenceHash: string;
 }
 
 export interface EvidenceEvaluationInput {
@@ -63,3 +64,12 @@ export interface EvidenceEvaluationInput {
   minimumConfidence?: number;
   requireCompleteEvidence?: boolean;
 }
+
+/** Valid evidence categories (must match runtime domain validator). */
+export type EvidenceCategory =
+  | "test"
+  | "build"
+  | "security"
+  | "runtime"
+  | "policy"
+  | "artifact";
