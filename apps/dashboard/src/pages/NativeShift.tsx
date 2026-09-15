@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import '../styles/native-shift.css';
+import { useEventStream, type StreamEvent } from '../hooks/useEventStream';
 
 type StageStatus = 'complete' | 'active' | 'pending' | 'blocked';
 
@@ -89,6 +90,22 @@ const statusLabel: Record<StageStatus, string> = {
 export default function NativeShift() {
   const [running, setRunning] = useState(false);
   const [demoStep, setDemoStep] = useState(3);
+  const [liveEvents, setLiveEvents] = useState<StreamEvent[]>([]);
+  const [liveEventCount, setLiveEventCount] = useState(0);
+
+  const handleEvent = (event: StreamEvent) => {
+    setLiveEvents((current) => [event, ...current].slice(0, 8));
+    setLiveEventCount((current) => current + 1);
+
+    if (
+      event.type === 'run:created' ||
+      event.type === 'command:dispatched'
+    ) {
+      setRunning(true);
+    }
+  };
+
+  const { isConnected } = useEventStream(handleEvent);
 
   const stages = useMemo(
     () =>
@@ -233,6 +250,16 @@ export default function NativeShift() {
               <span>FOUNDATION</span>
               <strong>1cef400d</strong>
             </div>
+
+            <div>
+              <span>EVENT STREAM</span>
+              <strong>{isConnected ? 'CONNECTED' : 'OFFLINE'}</strong>
+            </div>
+
+            <div>
+              <span>LIVE EVENTS</span>
+              <strong>{liveEventCount}</strong>
+            </div>
           </div>
         </article>
       </div>
@@ -294,6 +321,42 @@ export default function NativeShift() {
             );
           })}
         </div>
+      </article>
+
+      <article className="native-shift-panel native-shift-events">
+        <div className="native-shift-panel-head">
+          <div>
+            <div className="native-shift-panel-kicker">LIVE TELEMETRY</div>
+            <h3>Command Center events</h3>
+          </div>
+
+          <div className={`native-shift-live ${isConnected ? '' : 'offline'}`}>
+            <Activity size={14} />
+            {isConnected ? 'CONNECTED' : 'OFFLINE'}
+          </div>
+        </div>
+
+        {liveEvents.length === 0 ? (
+          <div className="native-shift-empty">
+            Waiting for real Command Center events…
+          </div>
+        ) : (
+          <div className="native-shift-event-list">
+            {liveEvents.map((event, index) => (
+              <div className="native-shift-event" key={`${event.id}-${index}`}>
+                <span className="native-shift-event-dot" />
+                <div>
+                  <strong>{event.type}</strong>
+                  <span>
+                    {event.timestamp
+                      ? new Date(event.timestamp).toLocaleTimeString()
+                      : '—'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </article>
 
       <div className="native-shift-footer-grid">
