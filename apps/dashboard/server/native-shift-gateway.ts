@@ -2,7 +2,14 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { DAG } from '@agi-ecosystem/dag-compiler';
-import { HybridEventStore } from '@agi-ecosystem/event-store';
+import {
+  HybridEventStore,
+  PostgresEventStore,
+  type EventStoreConfig,
+} from '@agi-ecosystem/event-store';
+import {
+  PostgresEvidenceStore,
+} from '@agi-ecosystem/evidence-engine';
 import { EndToEndPipeline } from '@agi-ecosystem/civilization-orchestrator';
 
 const NATIVE_SHIFT_REPOSITORY_ROOT = resolve(
@@ -56,6 +63,32 @@ class TelemetryEventStore extends HybridEventStore {
 
     return entry;
   }
+}
+
+function createEvidenceDatabaseConfig(): EventStoreConfig {
+  const required = [
+    'TEST_DB_HOST',
+    'TEST_DB_PORT',
+    'TEST_DB_NAME',
+    'TEST_DB_USER',
+    'TEST_DB_PASSWORD',
+  ] as const;
+
+  for (const name of required) {
+    if (!process.env[name]) {
+      throw new Error(
+        `Missing required evidence database environment variable: ${name}`,
+      );
+    }
+  }
+
+  return {
+    host: process.env.TEST_DB_HOST!,
+    port: Number(process.env.TEST_DB_PORT),
+    database: process.env.TEST_DB_NAME!,
+    user: process.env.TEST_DB_USER!,
+    password: process.env.TEST_DB_PASSWORD!,
+  };
 }
 
 function createDemoDag(): DAG {
@@ -151,6 +184,12 @@ export class NativeShiftGateway {
     mission.status = 'running';
 
     const eventStore = new TelemetryEventStore(this.publish);
+    const evidenceStore = PostgresEvidenceStore.fromConfig(
+      createEvidenceDatabaseConfig(),
+      'native_shift_evidence',
+    );
+
+    await evidenceStore.init();
 
     const pipeline = new EndToEndPipeline({
       mythos_policies: [
@@ -171,6 +210,7 @@ export class NativeShiftGateway {
         fault_tolerance: 'strict',
       },
       event_store: eventStore,
+      evidence_store: evidenceStore,
     });
 
     try {
@@ -218,6 +258,7 @@ export class NativeShiftGateway {
       });
     } finally {
       await pipeline.close();
+      await evidenceStore.close();
     }
   }
 }

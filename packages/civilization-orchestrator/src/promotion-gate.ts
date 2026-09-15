@@ -16,9 +16,7 @@ export interface ExecutionPromotionInput {
 }
 
 export interface ExecutionPromotionResult {
-  bundle: Parameters<typeof createEvidenceBundle>[0] & {
-    evidenceHash: string;
-  };
+  bundle: ReturnType<typeof createEvidenceBundle>;
   promotion: PromotionResult;
   evidenceHash: string;
 }

@@ -4,7 +4,12 @@ import { MythosEngine } from '@agi-ecosystem/mythos-policy-engine';
 import { SwarmOrchestrator } from '@agi-ecosystem/swarm-runtime';
 import { HybridEventStore } from '@agi-ecosystem/event-store';
 import { CapabilityManager, EventEmitter } from '@agi-ecosystem/agent-os-runtime';
-import { InMemoryEvidenceStore, type PromotionResult } from '@agi-ecosystem/evidence-engine';
+import {
+  EvidenceRecorder,
+  InMemoryEvidenceStore,
+  type EvidenceStore,
+  type PromotionResult,
+} from '@agi-ecosystem/evidence-engine';
 import { evaluateExecutionPromotion } from '../promotion-gate.js';
 import {
   collectExecutionVerification,
@@ -18,6 +23,7 @@ export interface PipelineConfig {
   simulation_enabled: boolean;
   swarm_config: ConstructorParameters<typeof SwarmOrchestrator>[0];
   event_store: HybridEventStore;
+  evidence_store?: EvidenceStore;
   verification_profile_ids?: readonly TrustedVerificationProfileId[];
   verification_collector?: (
     options?: {
@@ -51,6 +57,7 @@ export class EndToEndPipeline {
   private civ: CivilizationOrchestrator;
   private swarmInitialized = false;
   private simulationEnabled: boolean;
+  private readonly evidenceRecorder: EvidenceRecorder;
   private readonly verificationProfileIds:
     readonly TrustedVerificationProfileId[] | undefined;
   private readonly verificationCollector: NonNullable<
@@ -87,7 +94,11 @@ export class EndToEndPipeline {
     );
 
     const planner = new LongHorizonPlanner();
-      const evidenceStore = new InMemoryEvidenceStore();
+    const evidenceStore =
+      config.evidence_store ?? new InMemoryEvidenceStore();
+
+    this.evidenceRecorder = new EvidenceRecorder(evidenceStore);
+
     this.civ = new CivilizationOrchestrator(
       planner,
       this.swarm,
@@ -176,7 +187,7 @@ export class EndToEndPipeline {
 
         events.push('verification_completed');
 
-        const { promotion } = evaluateExecutionPromotion({
+        const promotionResult = evaluateExecutionPromotion({
           runId: jobId,
           taskId: dagId,
           baseRevision: dag.version,
@@ -206,6 +217,13 @@ export class EndToEndPipeline {
             ...verification.checks,
           ],
         });
+
+        await this.evidenceRecorder.recordEvaluation({
+          bundle: promotionResult.bundle,
+          promotion: promotionResult.promotion,
+        });
+
+        const { promotion } = promotionResult;
 
       events.push('promotion_evaluated');
 
