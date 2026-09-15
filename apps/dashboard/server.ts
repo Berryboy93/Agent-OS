@@ -10,6 +10,10 @@ import path from 'path'
 import { initializeControlPlane, getCommandCenter } from '@agent-os/control-plane'
 import { fileURLToPath } from 'url'
 import apiRouter from './server/agent-os-routes.js'
+import {
+  NativeShiftGateway,
+  type NativeShiftMissionRequest,
+} from './server/native-shift-gateway.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -30,6 +34,11 @@ app.use((_req, res, next) => {
 await initializeControlPlane(app).catch(err => console.error('[control-plane]', err.message))
 
 const commandCenter = getCommandCenter()
+
+const nativeShiftGateway = new NativeShiftGateway((event) => {
+  commandCenter.broadcast(event)
+})
+
 const asyncHandler = (fn: Function) => (req: any, res: any, next: any) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 }
@@ -78,6 +87,30 @@ ccRouter.post('/commands/dispatch', asyncHandler(async (req, res) => {
 ccRouter.get('/events/stream', (req, res) => {
   commandCenter.handleEventStream(res)
 })
+
+ccRouter.post('/native-shift/missions', asyncHandler(async (req, res) => {
+  const request = (req.body ?? {}) as NativeShiftMissionRequest
+  const mission = await nativeShiftGateway.startMission(request)
+  res.status(202).json(mission)
+}))
+
+ccRouter.get('/native-shift/missions/:runId', asyncHandler(async (req, res) => {
+  const mission = nativeShiftGateway.getMission(req.params.runId)
+
+  if (!mission) {
+    return res.status(404).json({
+      error: `Native Shift mission ${req.params.runId} not found`,
+    })
+  }
+
+  res.json(mission)
+}))
+
+ccRouter.get('/native-shift/missions', asyncHandler(async (_req, res) => {
+  res.json({
+    data: nativeShiftGateway.listMissions(),
+  })
+}))
 
 ccRouter.get('/rbac/roles', asyncHandler(async (req, res) => {
   res.json(commandCenter.getRoles())

@@ -70,6 +70,15 @@ importers:
       '@agent-os/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
+      '@agi-ecosystem/civilization-orchestrator':
+        specifier: workspace:*
+        version: link:../../packages/civilization-orchestrator
+      '@agi-ecosystem/dag-compiler':
+        specifier: workspace:*
+        version: link:../../packages/dag-compiler
+      '@agi-ecosystem/event-store':
+        specifier: workspace:*
+        version: link:../../packages/event-store
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)

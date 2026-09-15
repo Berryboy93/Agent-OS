@@ -33,3 +33,4 @@ export {
   type ExecutionVerificationOptions,
   type ExecutionVerificationResult,
 } from './execution-verification.js';
+export { EndToEndPipeline } from './pipeline/index.js';

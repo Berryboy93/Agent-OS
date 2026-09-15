@@ -27,7 +27,10 @@
     "lucide-react": "^1.40.0",
     "react-router-dom": "^7.18.3",
     "recharts": "^3.10.1",
-    "uuid": "^14.0.2"
+    "uuid": "^14.0.2",
+    "@agi-ecosystem/civilization-orchestrator": "workspace:*",
+    "@agi-ecosystem/dag-compiler": "workspace:*",
+    "@agi-ecosystem/event-store": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

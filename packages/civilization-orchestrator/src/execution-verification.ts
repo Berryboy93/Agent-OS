@@ -39,6 +39,7 @@ export const DEFAULT_EXECUTION_VERIFICATION_PROFILE_IDS = [
   'evidence-tests',
   'evidence-typecheck',
   'civilization-typecheck',
+  'rbac-security-tests',
 ] as const satisfies readonly TrustedVerificationProfileId[];
 
 

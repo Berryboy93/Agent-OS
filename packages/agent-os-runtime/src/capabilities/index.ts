@@ -1,3 +1,4 @@
+import { isAbsolute, relative, resolve } from 'node:path';
 import { z } from 'zod';
 
 export const Capability = z.object({
@@ -256,20 +257,18 @@ export class CapabilityManager {
     candidate: string,
     root: string,
   ): boolean {
-    const path = require('node:path') as typeof import('node:path');
-
-    const resolvedRoot = path.resolve(root);
-    const resolvedCandidate = path.resolve(candidate);
-    const relative = path.relative(
+    const resolvedRoot = resolve(root);
+    const resolvedCandidate = resolve(candidate);
+    const relativePath = relative(
       resolvedRoot,
       resolvedCandidate,
     );
 
     return (
-      relative === '' ||
+      relativePath === '' ||
       (
-        !relative.startsWith('..') &&
-        !path.isAbsolute(relative)
+        !relativePath.startsWith('..') &&
+        !isAbsolute(relativePath)
       )
     );
   }

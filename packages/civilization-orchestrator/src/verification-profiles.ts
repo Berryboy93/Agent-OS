@@ -9,6 +9,7 @@ export const TRUSTED_VERIFICATION_PROFILE_IDS = [
   'evidence-typecheck',
   'civilization-tests',
   'civilization-typecheck',
+  'rbac-security-tests',
 ] as const;
 
 export type TrustedVerificationProfileId =
@@ -80,6 +81,23 @@ const profiles = {
     required: true,
     critical: true,
   },
+
+  'rbac-security-tests': {
+    id: 'rbac-security-tests',
+    category: 'security',
+    description: 'RBAC security test suite',
+    command: 'pnpm',
+    args: [
+      'exec',
+      'vitest',
+      '--config',
+      './vitest.config.mjs',
+      'run',
+    ],
+    timeoutMs: 120_000,
+    required: true,
+    critical: true,
+  },
 } satisfies Record<
   TrustedVerificationProfileId,
   Omit<VerificationProfile, 'workingDirectory'>
@@ -111,6 +129,11 @@ export function getTrustedVerificationProfiles(
     'civilization-typecheck': {
       ...profiles['civilization-typecheck'],
       workingDirectory: root,
+    },
+
+    'rbac-security-tests': {
+      ...profiles['rbac-security-tests'],
+      workingDirectory: resolve(root, 'packages/rbac'),
     },
   });
 }
