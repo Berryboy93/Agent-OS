@@ -30,7 +30,8 @@
     "uuid": "^14.0.2",
     "@agi-ecosystem/civilization-orchestrator": "workspace:*",
     "@agi-ecosystem/dag-compiler": "workspace:*",
-    "@agi-ecosystem/event-store": "workspace:*"
+    "@agi-ecosystem/event-store": "workspace:*",
+    "@agi-ecosystem/evidence-engine": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

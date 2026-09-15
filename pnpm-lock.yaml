@@ -79,6 +79,9 @@ importers:
       '@agi-ecosystem/event-store':
         specifier: workspace:*
         version: link:../../packages/event-store
+      '@agi-ecosystem/evidence-engine':
+        specifier: workspace:*
+        version: link:../../packages/evidence-engine
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
