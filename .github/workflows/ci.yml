@@ -32,7 +32,7 @@ jobs:
       - run: npm run lint
 
   audit:
-    name: npm audit — no HIGH/CRITICAL
+    name: pnpm audit --audit-level high — no HIGH/CRITICAL
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - run: pnpm audit --audit-level high --audit-level=high
 
   secret-scan:
     name: Secret scan
