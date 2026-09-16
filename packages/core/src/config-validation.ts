@@ -37,10 +37,10 @@ const EnvironmentSchema = z.object({
   LOG_FORMAT: z.enum(['json', 'text']).default('json'),
 
   // Feature flags
-  ENABLE_MIGRATIONS: z.string().transform((v: string) => v === 'true').default('true'),
-  ENABLE_HEALTH_CHECKS: z.string().transform((v: string) => v === 'true').default('true'),
-  ENABLE_RATE_LIMITING: z.string().transform((v: string) => v === 'true').default('true'),
-  ENABLE_RBAC: z.string().transform((v: string) => v === 'true').default('true'),
+  ENABLE_MIGRATIONS: z.string().transform((v: string) => v === 'true').default(true),
+  ENABLE_HEALTH_CHECKS: z.string().transform((v: string) => v === 'true').default(true),
+  ENABLE_RATE_LIMITING: z.string().transform((v: string) => v === 'true').default(true),
+  ENABLE_RBAC: z.string().transform((v: string) => v === 'true').default(true),
 
   // Performance
   GRACEFUL_SHUTDOWN_TIMEOUT: z.coerce.number().default(30_000),

@@ -13,15 +13,15 @@ export const DAGNode = z.object({
   id: z.string().uuid(),
   type: NodeType,
   executor: z.string().min(1),
-  payload: z.record(z.any()).default({}),
+  payload: z.record(z.string(), z.any()).default({}),
   metadata: z.object({
     priority: z.number().int().min(0).max(100).default(50),
     timeout_ms: z.number().int().positive().default(30000),
     retry_policy: z.object({
       max_retries: z.number().int().min(0).default(3),
       backoff_ms: z.number().int().positive().default(1000)
-    }).default({})
-  }).default({})
+    }).prefault({})
+  }).prefault({})
 });
 export type DAGNode = z.infer<typeof DAGNode>;
 
@@ -42,7 +42,7 @@ export const DAG = z.object({
     created_at: z.string().datetime().default(() => new Date().toISOString()),
     author: z.string().optional(),
     tags: z.array(z.string()).default([])
-  }).default({})
+  }).prefault({})
 });
 export type DAG = z.infer<typeof DAG>;
 

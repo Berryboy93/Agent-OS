@@ -2,13 +2,32 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "ES2022"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../dag-compiler" },
-    { "path": "../simulation-engine" },
-    { "path": "../mythos-policy-engine" },
-    { "path": "../event-store" }
+    {
+      "path": "../dag-compiler"
+    },
+    {
+      "path": "../simulation-engine"
+    },
+    {
+      "path": "../mythos-policy-engine"
+    },
+    {
+      "path": "../event-store"
+    },
+    {
+      "path": "../swarm-runtime"
+    }
   ]
 }

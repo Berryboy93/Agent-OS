@@ -12,36 +12,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run typecheck
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
 
   lint:
     name: ESLint — no-explicit-any enforced
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
 
   audit:
-    name: npm audit — no HIGH/CRITICAL
+    name: pnpm audit --audit-level high — no HIGH/CRITICAL
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm audit --audit-level=high
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Ensure test env file exists
+
+        run: test -f packages/event-store/.env.test.example && cp packages/event-store/.env.test.example packages/event-store/.env.test.local || touch packages/event-store/.env.test.local
+
+      - run: pnpm audit --audit-level high --audit-level=high
 
   secret-scan:
     name: Secret scan
@@ -60,11 +73,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Verify agos doctor
         run: node packages/cli/src/index.ts doctor 2>&1 || true
       - name: Verify SECURITY.md present

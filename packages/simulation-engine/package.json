@@ -18,10 +18,10 @@
   "dependencies": {
     "@agi-ecosystem/dag-compiler": "workspace:*",
     "@agi-ecosystem/mythos-policy-engine": "workspace:*",
-    "zod": "^3.22.4"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "vitest": "^1.5.0"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

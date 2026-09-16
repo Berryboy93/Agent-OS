@@ -1,12 +1,15 @@
-import { VM } from 'vm2';
-import { v4 as uuidv4 } from 'uuid';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 export interface SandboxResult {
   success: boolean;
-  output: any;
+  output: unknown;
   logs: string[];
   execution_time_ms: number;
   memory_peak_mb: number;
+  cpu_ms: number;
   error?: string;
 }
 
@@ -19,9 +22,43 @@ export interface SandboxConfig {
   file_system_access: boolean;
 }
 
+interface RunnerResult {
+  type: 'result';
+  success: boolean;
+  output?: unknown;
+  logs: string[];
+  error?: string;
+  memory_peak_mb: number;
+  cpu_ms: number;
+}
+
+const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+const RUNNER_PATH = join(MODULE_DIR, 'runner.mjs');
+
+const NODE_RUNTIME_OVERHEAD_MB = 384;
+
+function clampPositiveInteger(value: number, fallback: number): number {
+  return Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : fallback;
+}
+
+function signalError(signal: NodeJS.Signals | null): string {
+  if (!signal) return 'Sandbox process exited without a result';
+
+  if (signal === 'SIGXCPU') {
+    return 'Sandbox CPU limit exceeded';
+  }
+
+  if (signal === 'SIGKILL') {
+    return 'Sandbox process was killed';
+  }
+
+  return `Sandbox process terminated by ${signal}`;
+}
+
 export class AgentSandbox {
-  private config: SandboxConfig;
-  private logs: string[] = [];
+  private readonly config: SandboxConfig;
 
   constructor(config: Partial<SandboxConfig> = {}) {
     this.config = {
@@ -31,64 +68,229 @@ export class AgentSandbox {
       allowed_modules: ['math', 'json', 'crypto'],
       network_access: false,
       file_system_access: false,
-      ...config
+      ...config,
     };
+
+    if (this.config.network_access) {
+      throw new Error(
+        'network_access=true is not supported by this sandbox backend',
+      );
+    }
+
+    if (this.config.file_system_access) {
+      throw new Error(
+        'file_system_access=true is not supported by this sandbox backend',
+      );
+    }
   }
 
-  private buildSandboxGlobals(input: Record<string, any>): Record<string, any> {
-    return {
-      console: {
-        log: (...args: any[]) => this.logs.push(args.map(a => String(a)).join(' ')),
-        error: (...args: any[]) => this.logs.push('ERROR: ' + args.map(a => String(a)).join(' '))
-      },
-      Math,
-      JSON,
-      Date,
-      setTimeout: () => { throw new Error('setTimeout not allowed'); },
-      setInterval: () => { throw new Error('setInterval not allowed'); },
-      require: (module: string) => {
-        if (!this.config.allowed_modules.includes(module)) {
-          throw new Error(`Module '${module}' not in allowlist`);
-        }
-        // In production, use a secure module loader
-        return {};
-      },
-      ...input
-    };
-  }
+  async execute(
+    code: string,
+    input: Record<string, unknown> = {},
+  ): Promise<SandboxResult> {
+    const start = process.hrtime.bigint();
 
-  async execute(code: string, input: Record<string, any> = {}): Promise<SandboxResult> {
-    const startTime = Date.now();
-    this.logs = [];
+    const timeoutMs = clampPositiveInteger(
+      this.config.timeout_ms,
+      30000,
+    );
+
+    const memoryLimitMb = clampPositiveInteger(
+      this.config.memory_limit_mb,
+      128,
+    );
+
+    const cpuLimitPercent = Math.min(
+      100,
+      Math.max(
+        1,
+        clampPositiveInteger(this.config.cpu_limit_percent, 50),
+      ),
+    );
 
     try {
-      // vm2's VM only accepts sandbox globals at construction time —
-      // build a fresh VM per execution so `input` is available inside the sandbox.
-      const vm = new VM({
-        timeout: this.config.timeout_ms,
-        sandbox: this.buildSandboxGlobals(input),
-        eval: false,
-        wasm: false
+      const addressSpaceMb = Math.max(
+        512,
+        memoryLimitMb + NODE_RUNTIME_OVERHEAD_MB,
+      );
+
+      const cpuBudgetSeconds = Math.max(
+        1,
+        Math.ceil((timeoutMs / 1000) * (cpuLimitPercent / 100)),
+      );
+
+      const nodeArgs: string[] = [
+        '--permission',
+        `--max-old-space-size=${Math.max(16, memoryLimitMb)}`,
+        RUNNER_PATH,
+      ];
+
+      if (this.config.network_access) {
+        nodeArgs.push('--allow-net=*');
+      }
+
+      const useNetworkNamespace = !this.config.network_access;
+
+      const commandArgs: string[] = [
+        `--cpu=${cpuBudgetSeconds}`,
+        `--as=${addressSpaceMb * 1024 * 1024}`,
+        '--',
+      ];
+
+      if (useNetworkNamespace) {
+        commandArgs.push(
+          'unshare',
+          '--user',
+          '--map-root-user',
+          '--net',
+          '--mount',
+          '--pid',
+          '--fork',
+          '--mount-proc',
+          '--',
+        );
+      }
+
+      commandArgs.push(process.execPath, ...nodeArgs);
+
+      const child = spawn('prlimit', commandArgs, {
+        cwd: tmpdir(),
+        env: {
+          PATH: process.env.PATH ?? '',
+          NODE_NO_WARNINGS: '1',
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
       });
 
-      const result = vm.run(code);
+      const response = await new Promise<RunnerResult>((resolve, reject) => {
+        let stdout = '';
+        let stderr = '';
+        let settled = false;
+
+        const finish = (fn: () => void) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          fn();
+        };
+
+        const timer = setTimeout(() => {
+          finish(() => {
+            child.kill('SIGKILL');
+            reject(new Error(`Sandbox timeout after ${timeoutMs}ms`));
+          });
+        }, timeoutMs);
+
+        child.stdout.setEncoding('utf8');
+        child.stderr.setEncoding('utf8');
+
+        child.stdout.on('data', (chunk: string) => {
+          stdout += chunk;
+        });
+
+        child.stderr.on('data', (chunk: string) => {
+          stderr += chunk;
+        });
+
+        child.on('error', (error) => {
+          finish(() => reject(error));
+        });
+
+        child.on('exit', (code, signal) => {
+          finish(() => {
+            if (signal) {
+              reject(new Error(signalError(signal)));
+              return;
+            }
+
+            if (code !== 0) {
+              const detail = stderr.trim();
+              reject(
+                new Error(
+                  detail
+                    ? `Sandbox process exited with code ${code}: ${detail}`
+                    : `Sandbox process exited with code ${code}`,
+                ),
+              );
+              return;
+            }
+
+            const line = stdout
+              .trim()
+              .split('\n')
+              .filter(Boolean)
+              .at(-1);
+
+            if (!line) {
+              reject(
+                new Error(
+                  stderr.trim() || 'Sandbox produced no result',
+                ),
+              );
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(line) as RunnerResult;
+
+              if (parsed.type !== 'result') {
+                throw new Error('Invalid sandbox response');
+              }
+
+              resolve(parsed);
+            } catch (error) {
+              reject(
+                new Error(
+                  `Invalid sandbox response: ${
+                    error instanceof Error
+                      ? error.message
+                      : String(error)
+                  }`,
+                ),
+              );
+            }
+          });
+        });
+
+        child.stdin.write(
+          JSON.stringify({
+            code,
+            input,
+            allowedModules: this.config.allowed_modules,
+          }),
+        );
+
+        child.stdin.end();
+      });
+
+      const executionTimeMs = Number(
+        process.hrtime.bigint() - start,
+      ) / 1_000_000;
 
       return {
-        success: true,
-        output: result,
-        logs: this.logs,
-        execution_time_ms: Date.now() - startTime,
-        memory_peak_mb: 0 // Would use process.memoryUsage() in Node
+        success: response.success,
+        output: response.output ?? null,
+        logs: response.logs ?? [],
+        error: response.error,
+        execution_time_ms: executionTimeMs,
+        memory_peak_mb: response.memory_peak_mb ?? 0,
+        cpu_ms: response.cpu_ms ?? 0,
       };
     } catch (error) {
+      const executionTimeMs = Number(
+        process.hrtime.bigint() - start,
+      ) / 1_000_000;
+
       return {
         success: false,
         output: null,
-        logs: this.logs,
-        execution_time_ms: Date.now() - startTime,
+        logs: [],
+        error: error instanceof Error ? error.message : String(error),
+        execution_time_ms: executionTimeMs,
         memory_peak_mb: 0,
-        error: error instanceof Error ? error.message : String(error)
+        cpu_ms: 0,
       };
+    } finally {
     }
   }
 

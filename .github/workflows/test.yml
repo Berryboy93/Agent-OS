@@ -26,8 +26,8 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+        run: pnpm install --frozen-lockfile      - name: Ensure test env file exists
+        run: test -f packages/event-store/.env.test.example && cp packages/event-store/.env.test.example packages/event-store/.env.test.local || touch packages/event-store/.env.test.local
       - name: Run tests
         run: pnpm test
 

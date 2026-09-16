@@ -1,9 +1,13 @@
 packages:
   - 'packages/*'
   - 'apps/*'
-  - '!packages/civilization-orchestrator'
 allowBuilds:
   better-sqlite3: true
   esbuild: true
   msgpackr-extract: true
   sqlite3: true
+
+overrides:
+  esbuild: ">=0.25.0"
+  uuid: ">=11.1.1"
+  qs: ">=6.16.0"

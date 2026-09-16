@@ -1,5 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
-import { apiClient } from '../services/api';
+import { useEffect, useRef, useState } from 'react';
 
 export interface StreamEvent {
   id: string;
@@ -15,56 +14,67 @@ export interface StreamEvent {
 export function useEventStream(onEvent?: (event: StreamEvent) => void) {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const onEventRef = useRef(onEvent);
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   useEffect(() => {
     let eventSource: EventSource | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let destroyed = false;
 
-    const connect = async () => {
-      try {
-        const response = await apiClient.streamEvents();
-        eventSource = new EventSource('/api/command-center/events/stream');
+    const connect = () => {
+      if (destroyed) return;
 
-        eventSource.onopen = () => {
-          setIsConnected(true);
-          setError(null);
-        };
+      eventSource = new EventSource('/api/command-center/events/stream');
 
-        eventSource.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            onEvent?.(data);
-          } catch (err) {
-            console.error('Failed to parse event:', err);
-          }
-        };
+      eventSource.onopen = () => {
+        setIsConnected(true);
+        setError(null);
+      };
 
-        eventSource.onerror = () => {
-          setIsConnected(false);
-          setError('Connection lost');
-          eventSource?.close();
-          eventSource = null;
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as StreamEvent;
+          onEventRef.current?.(data);
+        } catch (err) {
+          console.error('Failed to parse event:', err);
+        }
+      };
 
-          // Attempt reconnection after 3 seconds
-          reconnectTimeout = setTimeout(connect, 3000);
-        };
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Connection failed');
-        reconnectTimeout = setTimeout(connect, 3000);
-      }
+      eventSource.onerror = () => {
+        setIsConnected(false);
+        setError('Connection lost');
+        eventSource?.close();
+        eventSource = null;
+
+        if (!destroyed && !reconnectTimeout) {
+          reconnectTimeout = setTimeout(() => {
+            reconnectTimeout = null;
+            connect();
+          }, 3000);
+        }
+      };
     };
 
     connect();
 
     return () => {
+      destroyed = true;
+
       if (eventSource) {
         eventSource.close();
+        eventSource = null;
       }
+
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
       }
     };
-  }, [onEvent]);
+  }, []);
 
   return { isConnected, error };
 }
