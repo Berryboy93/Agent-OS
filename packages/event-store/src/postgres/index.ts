@@ -378,12 +378,34 @@ export class PostgresEventStore {
     return timestamp;
   }
 
+  private stableJson(value: unknown): string {
+    return JSON.stringify(value, (_key, current) => {
+      if (
+        current &&
+        typeof current === "object" &&
+        !Array.isArray(current)
+      ) {
+        return Object.fromEntries(
+          Object.entries(current).sort(([a], [b]) =>
+            a.localeCompare(b),
+          ),
+        );
+      }
+
+      return current;
+    });
+  }
+
   private computeHash(event: StoreEvent): string {
+    const normalizedTimestamp = this.normalizeTimestamp(event.timestamp);
+    const stablePayload = this.stableJson(event.payload);
+    const previousHash = event.previous_hash ?? GENESIS_HASH;
+
     const data = [
-      this.normalizeTimestamp(event.timestamp),
+      normalizedTimestamp,
       event.type,
-      JSON.stringify(event.payload),
-      event.previous_hash ?? GENESIS_HASH,
+      stablePayload,
+      previousHash,
     ].join(":");
 
     return createHash("sha256").update(data).digest("hex");
