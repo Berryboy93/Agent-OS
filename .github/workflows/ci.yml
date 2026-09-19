@@ -50,11 +50,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - name: Ensure test env file exists
-
-        run: test -f packages/event-store/.env.test.example && cp packages/event-store/.env.test.example packages/event-store/.env.test.local || touch packages/event-store/.env.test.local
-
-      - run: pnpm audit --audit-level high --audit-level=high
+      - run: pnpm audit --audit-level high
 
   secret-scan:
     name: Secret scan

@@ -40,7 +40,22 @@ function hashText(value: string): string {
     .digest('hex');
 }
 
-async function hashUntrackedFiles(
+const UNTRACKED_HASH_MAX_ATTEMPTS = 5;
+const UNTRACKED_HASH_RETRY_BASE_MS = 25;
+
+function isTransientUntrackedRace(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    'code' in error &&
+    (error as NodeJS.ErrnoException).code === 'ENOENT'
+  );
+}
+
+async function sleep(milliseconds: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function hashUntrackedFilesOnce(
   repositoryRoot: string,
 ): Promise<string> {
   const output = await git(repositoryRoot, [
@@ -68,7 +83,7 @@ async function hashUntrackedFiles(
       hash.update(await readFile(absolutePath));
     } else if (stat.isSymbolicLink()) {
       hash.update(
-        await readFile(absolutePath, 'utf8').catch(() => ''),
+        await readFile(absolutePath, 'utf8'),
         'utf8',
       );
     } else {
@@ -79,6 +94,41 @@ async function hashUntrackedFiles(
   }
 
   return hash.digest('hex');
+}
+
+async function hashUntrackedFiles(
+  repositoryRoot: string,
+): Promise<string> {
+  let lastError: unknown;
+
+  for (
+    let attempt = 1;
+    attempt <= UNTRACKED_HASH_MAX_ATTEMPTS;
+    attempt += 1
+  ) {
+    try {
+      return await hashUntrackedFilesOnce(repositoryRoot);
+    } catch (error) {
+      lastError = error;
+
+      if (
+        !isTransientUntrackedRace(error) ||
+        attempt === UNTRACKED_HASH_MAX_ATTEMPTS
+      ) {
+        throw error;
+      }
+
+      await sleep(
+        UNTRACKED_HASH_RETRY_BASE_MS * 2 ** (attempt - 1),
+      );
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(
+        'Failed to hash untracked files after bounded retries.',
+      );
 }
 
 export async function captureRepositoryProvenance(

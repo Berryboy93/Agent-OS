@@ -18,7 +18,7 @@
     "@agent-os/core": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^7.0.2",
+    "typescript": "6.0.3",
     "@types/node": "26.4.1"
   }
 }

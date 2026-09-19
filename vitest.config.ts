@@ -20,6 +20,7 @@ export default defineConfig({
       '**/.refactor-backups/**',
       '**/.type-repair-backups/**',
       '**/.quarantine/**',
+      '**/.repair-backups/**',
       '**/src.stub-backup/**',
     ],
 
@@ -43,6 +44,7 @@ export default defineConfig({
         '**/.refactor-backups/**',
         '**/.type-repair-backups/**',
         '**/.quarantine/**',
+        '**/.repair-backups/**',
         '**/src.stub-backup/**',
       ],
     },

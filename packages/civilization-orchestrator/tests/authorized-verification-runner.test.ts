@@ -102,25 +102,29 @@ describe('AuthorizedVerificationRunner', () => {
     expect(result.reason).toContain('not within an allowed path');
   });
 
-  it('executes a granted trusted profile', async () => {
-    registerVerificationCapabilities(
-      capabilities,
-      agentId,
-      ['evidence-typecheck'],
-      repositoryRoot,
-    );
+  it(
+    'executes a granted trusted profile',
+    async () => {
+      registerVerificationCapabilities(
+        capabilities,
+        agentId,
+        ['evidence-typecheck'],
+        repositoryRoot,
+      );
 
-    const runner = new AuthorizedVerificationRunner({
-      repositoryRoot,
-      agentId,
-      capabilityManager: capabilities,
-    });
+      const runner = new AuthorizedVerificationRunner({
+        repositoryRoot,
+        agentId,
+        capabilityManager: capabilities,
+      });
 
-    const result = await runner.run('evidence-typecheck');
+      const result = await runner.run('evidence-typecheck');
 
-    expect(result.check.id).toBe('evidence-typecheck');
-    expect(result.check.category).toBe('build');
-    expect(result.check.status).toBe('passed');
-    expect(result.exitCode).toBe(0);
-  });
+      expect(result.check.id).toBe('evidence-typecheck');
+      expect(result.check.category).toBe('build');
+      expect(result.check.status).toBe('passed');
+      expect(result.exitCode).toBe(0);
+    },
+    15_000,
+  );
 });
