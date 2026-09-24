@@ -1,15 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmitOnError": false
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "references": [
-    { "path": "../dag-compiler" },
-    { "path": "../event-store" }
+    {
+      "path": "../dag-compiler"
+    },
+    {
+      "path": "../event-store"
+    }
   ]
 }

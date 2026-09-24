@@ -18,6 +18,6 @@
     "@agent-os/core": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "*"
+    "typescript": "6.0.3"
   }
 }

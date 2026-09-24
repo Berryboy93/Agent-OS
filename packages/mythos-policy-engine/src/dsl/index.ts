@@ -34,7 +34,7 @@ export type Action =
 export class MythosParser {
   parse(source: string): ParsedPolicy {
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
-    parser.feed(source);
+    parser.feed(source.trim());
 
     if (parser.results.length === 0) {
       throw new Error('Parse failed: incomplete input');

@@ -7,15 +7,17 @@ const semantics = grammar.createSemantics();
 
 semantics.addOperation("toAST", {
   Policy(_policy, _open, rules, _close) {
-    return { rules: rules.asIteration().children.map(r => r.toAST()) };
+    return {
+      rules: rules.asIteration().children.map((rule) => rule.toAST()),
+    };
   },
 
   Rule(_rule, name, _open, when, ifClause, then, _close) {
     return {
       name: name.toAST(),
       when: when.toAST(),
-      condition: ifClause.children[0]?.toAST() || null,
-      actions: then.toAST()
+      condition: ifClause.children[0]?.toAST() ?? null,
+      actions: then.toAST(),
     };
   },
 
@@ -31,23 +33,72 @@ semantics.addOperation("toAST", {
     return condition.toAST();
   },
 
-  Expression(left, op, right) {
+  Expression(expression) {
+    return expression.toAST();
+  },
+
+  ComparisonExpression(expression) {
+    return expression.toAST();
+  },
+
+  BasicComparison(left, op, right) {
     return {
       left: left.toAST(),
       operator: op.sourceString,
-      right: right.toAST()
+      right: right.toAST(),
+    };
+  },
+
+  MemberComparison(left, op, right) {
+    return {
+      left: left.toAST(),
+      operator: op.sourceString,
+      right: right.toAST(),
+    };
+  },
+
+  AndExpression(_open, left, _and, right, _close) {
+    return {
+      left: left.toAST(),
+      operator: "and",
+      right: right.toAST(),
+    };
+  },
+
+  OrExpression(_open, left, _or, right, _close) {
+    return {
+      left: left.toAST(),
+      operator: "or",
+      right: right.toAST(),
     };
   },
 
   ThenClause(_then, _colon, first, _comma, rest) {
-    return [first.toAST(), ...rest.asIteration().children.map(r => r.toAST())];
+    return [
+      first.toAST(),
+      ...rest.asIteration().children.map((action) => action.toAST()),
+    ];
   },
 
-  Action(action, _open, arg, _close) {
-    if (arg) {
-      return { type: action.sourceString, argument: arg.toAST() };
-    }
-    return { type: action.sourceString };
+  Action(action) {
+    return action.toAST();
+  },
+
+  SimpleAction(action) {
+    return {
+      type: action.sourceString,
+    };
+  },
+
+  ParameterizedAction(action, _open, argument, _close) {
+    return {
+      type: action.sourceString,
+      argument: argument.toAST(),
+    };
+  },
+
+  CompOp(op) {
+    return op.sourceString;
   },
 
   String(_open, chars, _close) {
@@ -58,19 +109,23 @@ semantics.addOperation("toAST", {
     return this.sourceString;
   },
 
-  Value(val) {
-    const str = val.sourceString;
+  Value(value) {
+    const str = value.sourceString;
+
     if (str === "true") return true;
     if (str === "false") return false;
-    const num = parseFloat(str);
-    return isNaN(num) ? str : num;
-  }
+
+    const num = Number(str);
+    return Number.isNaN(num) ? str : num;
+  },
 });
 
 export function parsePolicy(source: string): Policy {
-  const match = grammar.match(source);
+  const match = grammar.match(source.trim());
+
   if (match.failed()) {
     throw new SyntaxError(`Policy parse error: ${match.message}`);
   }
+
   return semantics(match).toAST() as Policy;
 }

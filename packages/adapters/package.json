@@ -18,13 +18,13 @@
   },
   "dependencies": {
     "@agent-os/core": "workspace:*",
-    "@anthropic-ai/sdk": "^0.32.1",
+    "@anthropic-ai/sdk": "^0.123.0",
     "@google/generative-ai": "^0.24.1",
-    "@mistralai/mistralai": "^2.2.5",
-    "cohere-ai": "^8.0.0",
+    "@mistralai/mistralai": "^2.6.4",
+    "cohere-ai": "^8.1.0",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "typescript": "*"
+    "typescript": "6.0.3"
   }
 }

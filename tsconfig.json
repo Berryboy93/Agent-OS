@@ -1,27 +1,23 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "packages/*/src": ["packages/*/src"],
-      "@r3/*": [
-        "packages/*/src"
-      ],
-      "@agent-os/*": [
-        "packages/*/dist"
-      ],
-      "@agi-ecosystem/*": [
-        "packages/*/src"
-      ]
-    }
-  }
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/core" },
+    { "path": "./packages/adapters" },
+    { "path": "./packages/db" },
+    { "path": "./packages/events" },
+    { "path": "./packages/event-store" },
+    { "path": "./packages/memory" },
+    { "path": "./packages/runtime" },
+    { "path": "./packages/scheduler" },
+    { "path": "./packages/sdk" },
+    { "path": "./packages/cli" },
+    { "path": "./packages/api-server" },
+    { "path": "./packages/dag-compiler" },
+    { "path": "./packages/mythos-policy-engine" },
+    { "path": "./packages/agent-os-runtime" },
+    { "path": "./packages/simulation-engine" },
+    { "path": "./packages/swarm-runtime" },
+    { "path": "./packages/telemetry" }
+  ]
 }

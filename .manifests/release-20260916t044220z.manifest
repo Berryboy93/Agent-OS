@@ -1,0 +1,10 @@
+RELEASE MANIFEST
+Timestamp: 20260916t044220z
+Commit SHA: 6405a5a3fec04b267e77118cbb3230269efab6cc
+Branch: feature/native-shift-show-and-tell-v0.1
+Dirty State:  M packages/event-store/src/postgres/index.ts
+ M packages/event-store/tests/event-store.test.ts
+?? .e3-backups/
+--- Hash Fingerprints ---
+pnpm-lock.yaml SHA256: 551e09a0608f1482eda654d0701aa39dc50b6f93d57e6c168d8f4fed2e7167f2
+package.json SHA256: f1eec2c64075613c420d2525d9ff22b994453a420f6fd7bcd8ea64feb4756136

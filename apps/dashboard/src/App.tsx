@@ -15,8 +15,10 @@ import {
 import { useEventStream } from './hooks/useEventStream';
 
 import { ToolsPage } from './pages/Tools';
+import NativeShift from './pages/NativeShift';
 
 type ViewName =
+  | 'NativeShift'
   | 'Overview'
   | 'Runs'
   | 'Agents'
@@ -45,6 +47,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { label: 'NativeShift', icon: '◈' },
   { label: 'Overview', icon: '⊞' },
   { label: 'Runs', icon: '▶' },
   { label: 'Agents', icon: '◈' },
@@ -62,6 +65,7 @@ const commands: Array<{
   action: ViewName;
   key: string;
 }> = [
+  { label: '◈ Open NATIVE//SHIFT', action: 'NativeShift', key: '⌘ 0' },
   { label: '→ Find runs', action: 'Runs', key: 'Enter' },
   { label: '◈ Open agents', action: 'Agents', key: '⌘ 1' },
   { label: '✓ Pending approvals', action: 'Approvals', key: '⌘ 2' },
@@ -719,7 +723,11 @@ export default function App() {
             </div>
           </header>
 
-          {currentView === 'Tools' ? (
+          {currentView === 'NativeShift' ? (
+            <section className="workspace-panel tools-host">
+              <NativeShift />
+            </section>
+          ) : currentView === 'Tools' ? (
             <section className="workspace-panel tools-host">
               <ToolsPage />
             </section>

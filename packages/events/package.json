@@ -19,7 +19,7 @@
     "@agent-os/db": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "*"
+    "typescript": "6.0.3"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts"

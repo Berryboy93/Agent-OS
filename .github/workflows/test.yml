@@ -10,6 +10,21 @@ jobs:
 
     timeout-minutes: 15
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: agi_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d agi_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +43,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create CI test environment
+        run: |
+          cat > packages/event-store/.env.test.local <<'EOF'
+          TEST_DB_HOST=127.0.0.1
+          TEST_DB_PORT=5432
+          TEST_DB_NAME=agi_test
+          TEST_DB_USER=postgres
+          TEST_DB_PASSWORD=postgres
+          EOF
       - name: Run tests
         run: pnpm test
 

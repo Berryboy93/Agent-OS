@@ -12,18 +12,21 @@ export const NodeSchema = z.object({
   id: z.string().uuid(),
   type: NodeType,
   executor: z.string().min(1),
-  payload: z.record(z.unknown()).default({}),
+  payload: z.record(z.string(), z.unknown()).default({}),
   metadata: z.object({
     timeoutMs: z.number().positive().default(30000),
     retries: z.number().min(0).default(3),
     priority: z.number().min(0).max(100).default(50)
-  }).default({})
+  }).prefault({})
 });
 
 export const EdgeSchema = z.object({
   from: z.string().uuid(),
   to: z.string().uuid(),
-  condition: z.function().args(z.unknown()).returns(z.boolean()).optional()
+  condition: z.function({
+    input: [z.unknown()],
+    output: z.boolean(),
+  }).optional()
 });
 
 export const DAGSchema = z.object({

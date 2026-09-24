@@ -1,0 +1,9 @@
+RELEASE MANIFEST
+Timestamp: 20260916t044810z
+Commit SHA: e370bd4a86b1395532f070c04aefbc5b8c2c2cca
+Branch: feature/native-shift-show-and-tell-v0.1
+Dirty State: ?? .e3-backups/
+?? .manifests/release-20260916t044547z.manifest
+--- Hash Fingerprints ---
+pnpm-lock.yaml SHA256: 551e09a0608f1482eda654d0701aa39dc50b6f93d57e6c168d8f4fed2e7167f2
+package.json SHA256: f1eec2c64075613c420d2525d9ff22b994453a420f6fd7bcd8ea64feb4756136

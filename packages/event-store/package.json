@@ -12,16 +12,16 @@
   },
   "scripts": {
     "build": "tsc --build",
-    "test": "vitest run"
+    "test": "node --env-file=.env.test.local ../../node_modules/vitest/vitest.mjs run"
   },
   "dependencies": {
     "kafkajs": "^2.2.4",
-    "pg": "^8.11.3"
+    "pg": "^8.23.0"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^26.4.1",
     "@types/pg": "^8.23.1",
-    "typescript": "^5.4.0",
-    "vitest": "^1.5.0"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.11"
   }
 }

@@ -5,13 +5,20 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@agi-ecosystem/agent-os": "workspace:*",
     "@agi-ecosystem/dag-compiler": "workspace:*",
     "@agent-os/core": "workspace:*",
-    "@agent-os/events": "workspace:*"
+    "@agent-os/events": "workspace:*",
+    "@agi-ecosystem/swarm-runtime": "workspace:*",
+    "@agi-ecosystem/simulation-engine": "workspace:*",
+    "@agi-ecosystem/mythos-policy-engine": "workspace:*",
+    "@agi-ecosystem/event-store": "workspace:*",
+    "@agi-ecosystem/agent-os-runtime": "workspace:*",
+    "@agi-ecosystem/evidence-engine": "workspace:*"
   },
   "devDependencies": {
     "typescript": "*"

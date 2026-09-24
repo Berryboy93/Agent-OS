@@ -1,0 +1,27 @@
+{
+  "name": "@agi-ecosystem/evidence-engine",
+  "version": "0.3.1",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agi-ecosystem/event-store": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "6.0.3",
+    "vitest": "^4.1.11"
+  }
+}
